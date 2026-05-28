@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nyc-taxi"
+version = "1.0.0"
+description = "Production-grade streaming ETL pipeline for NYC Yellow Taxi trip data"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.7.1",
+    "pydantic-settings>=2.2.1",
+    "confluent-kafka>=2.4.0",
+    "clickhouse-driver>=0.2.9",
+    "clickhouse-connect>=0.7.16",
+    "pyarrow>=16.0.0",
+    "pandas>=2.2.2",
+    "fastapi>=0.111.0",
+    "uvicorn>=0.29.0",
+    "prometheus-client>=0.20.0",
+    "structlog>=24.1.0",
+    "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.6",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.4.4",
+    "mypy>=1.10.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["etl*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["etl"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--cov=etl --cov-report=term-missing --cov-report=html"
+
+[tool.coverage.run]
+source = ["etl"]
+omit = ["etl/entrypoints/*", "tests/*"]
