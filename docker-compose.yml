@@ -1,5 +1,5 @@
 services:
-  #  ClickHouse
+  # ClickHouse
   clickhouse:
     image: clickhouse/clickhouse-server:24.8
     container_name: nyc-taxi-clickhouse
@@ -21,7 +21,7 @@ services:
       retries: 5
     restart: unless-stopped
 
-  #  Zookeeper (Kafka dependency)
+  # Zookeeper (Kafka dependency)
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
     container_name: nyc-taxi-zookeeper
@@ -33,7 +33,7 @@ services:
       - zookeeper_logs:/var/lib/zookeeper/log
     restart: unless-stopped
 
-  #  Kafka 
+  # Kafka
   kafka:
     image: confluentinc/cp-kafka:7.6.1
     container_name: nyc-taxi-kafka
@@ -88,7 +88,7 @@ services:
       - "--storage.tsdb.retention.time=15d"
     restart: unless-stopped
 
-  #  Grafana
+  # Grafana
   grafana:
     image: grafana/grafana:10.4.2
     container_name: nyc-taxi-grafana
