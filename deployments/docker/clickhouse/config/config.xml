@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<clickhouse>
+
+    <!-- Network -->
+    <listen_host>0.0.0.0</listen_host>
+    <tcp_port>9000</tcp_port>
+    <http_port>8123</http_port>
+
+    <!-- Prometheus Metrics -->
+    <prometheus>
+        <endpoint>/metrics</endpoint>
+        <port>9363</port>
+        <metrics>true</metrics>
+        <events>true</events>
+        <asynchronous_metrics>true</asynchronous_metrics>
+    </prometheus>
+
+    <!-- Storage -->
+    <path>/var/lib/clickhouse/</path>
+    <tmp_path>/var/lib/clickhouse/tmp/</tmp_path>
+    <user_files_path>/var/lib/clickhouse/user_files/</user_files_path>
+    <format_schema_path>/var/lib/clickhouse/format_schemas/</format_schema_path>
+
+    <!-- Logging -->
+    <logger>
+        <level>information</level>
+        <console>true</console>
+        <formatting>
+            <type>JSON</type>
+        </formatting>
+    </logger>
+
+    <!-- Connections -->
+    <max_connections>100</max_connections>
+    <max_concurrent_queries>50</max_concurrent_queries>
+    <keep_alive_timeout>3</keep_alive_timeout>
+
+    <!-- Memory -->
+    <max_server_memory_usage_to_ram_ratio>0.9</max_server_memory_usage_to_ram_ratio>
+
+    <!-- MergeTree -->
+    <merge_tree>
+        <max_bytes_to_merge_at_max_space_in_pool>161061273600</max_bytes_to_merge_at_max_space_in_pool>
+        <replicated_deduplication_window>100</replicated_deduplication_window>
+        <non_replicated_deduplication_window>100</non_replicated_deduplication_window>
+    </merge_tree>
+
+    <!-- Defaults -->
+    <default_database>taxi</default_database>
+    <timezone>UTC</timezone>
+
+    <!-- Dictionaries -->
+    <dictionaries_config>/etc/clickhouse-server/dictionaries/*.xml</dictionaries_config>
+
+    <!-- Cache -->
+    <mark_cache_size>1073741824</mark_cache_size>
+
+</clickhouse>
