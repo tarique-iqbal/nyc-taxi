@@ -1,15 +1,16 @@
 services:
   # ClickHouse
   clickhouse:
-    image: clickhouse/clickhouse-server:24.8
+    build:
+      context: ./deployments/docker/clickhouse
+      dockerfile: Dockerfile
     container_name: nyc-taxi-clickhouse
     ports:
       - "9000:9000"
       - "8123:8123"
+      - "9363:9363"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-      - ./deployments/docker/clickhouse/config/custom.xml:/etc/clickhouse-server/config.d/custom.xml:ro
-      - ./deployments/docker/clickhouse/config/users.xml:/etc/clickhouse-server/users.d/users.xml:ro
     environment:
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-taxi}
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
