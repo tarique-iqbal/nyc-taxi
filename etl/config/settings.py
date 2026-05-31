@@ -98,7 +98,8 @@ class MonitoringSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    prometheus_port: int = Field(default=9100, alias="PROMETHEUS_PORT")
+    prometheus_port_producer: int = Field(default=9100, alias="PROMETHEUS_PORT_PRODUCER")
+    prometheus_port_consumer: int = Field(default=9101, alias="PROMETHEUS_PORT_CONSUMER")
     health_port: int = Field(default=8000, alias="HEALTH_PORT")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 

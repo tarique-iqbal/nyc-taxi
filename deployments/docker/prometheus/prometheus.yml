@@ -1,8 +1,61 @@
+# Prometheus scrape configuration for the NYC Taxi ETL pipeline.
+#
+# Targets:
+#   etl_pipeline - ETL application metrics
+#   clickhouse   - ClickHouse server metrics
+#   kafka        - Kafka metrics via kafka-exporter (optional)
+#
+# Prometheus UI: http://localhost:9090
+
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+  external_labels:
+    environment: "local"
+    pipeline: "nyc-taxi-etl"
 
 scrape_configs:
-  - job_name: prometheus
+
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # ETL application metrics.
+  # Ports correspond to PROMETHEUS_PORT values configured for the producer
+  # and consumer services.
+  - job_name: "etl_pipeline"
     static_configs:
       - targets:
-          - localhost:9090
+          - "host.docker.internal:9100" # producer
+          - "host.docker.internal:9101" # consumer
+        labels:
+          component: "etl"
+
+    # If ETL services are containerized:
+    # targets:
+    #   - "producer:9100"
+    #   - "consumer:9101"
+
+  # ClickHouse native Prometheus endpoint.
+  # Enabled in config.xml:
+  # <prometheus><port>9363</port></prometheus>
+  #
+  # Visit http://clickhouse:9363/metrics to inspect available metrics.
+  - job_name: "clickhouse"
+    static_configs:
+      - targets: ["clickhouse:9363"]
+        labels:
+          component: "clickhouse"
+    metrics_path: /metrics
+
+  # Kafka metrics via kafka-exporter.
+  # Uncomment when kafka-exporter is added to docker-compose.yml.
+  #
+  # - job_name: "kafka"
+  #   static_configs:
+  #     - targets: ["kafka-exporter:9308"]
+  #       labels:
+  #         component: "kafka"
