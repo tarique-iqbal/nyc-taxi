@@ -1,0 +1,40 @@
+# Grafana datasource auto-provisioning.
+# Grafana loads this on startup - no manual UI configuration needed.
+#
+# Datasources:
+#   1. Prometheus - ETL pipeline and ClickHouse metrics
+#   2. ClickHouse - direct SQL queries for ad-hoc exploration
+
+apiVersion: 1
+
+datasources:
+
+  # Prometheus
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus_uid
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: "15s"
+      httpMethod: POST
+
+  # ClickHouse
+  # Uses the official Grafana ClickHouse plugin (grafana-clickhouse-datasource).
+  # The readonly_user defined in users.xml is used here - never the ETL user.
+  - name: ClickHouse
+    type: grafana-clickhouse-datasource
+    uid: clickhouse_uid
+    access: proxy
+    editable: false
+    jsonData:
+      host: clickhouse
+      port: 9000
+      username: readonly_user
+      defaultDatabase: taxi
+      protocol: native
+      secure: false
+    secureJsonData:
+      password: grafana_readonly

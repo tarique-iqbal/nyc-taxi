@@ -1,0 +1,15 @@
+# Tells Grafana where to find dashboard JSON files on disk.
+# Any .json file dropped into the mapped volume directory is auto-loaded.
+
+apiVersion: 1
+
+providers:
+  - name: "NYC Taxi ETL"
+    orgId: 1
+    type: file
+    disableDeletion: false      # remove dashboards when JSON files are removed
+    updateIntervalSeconds: 30   # re-scan dashboard files every 30 seconds
+    allowUiUpdates: false       # dashboards are managed through Git/JSON only
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false
