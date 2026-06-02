@@ -1,5 +1,3 @@
--- clickhouse/migrations/002_materialized_views.sql
---
 -- Migration: 002
 -- Description: Materialized views for sub-second dashboard aggregations
 -- Depends on: 001_initial_schema.sql
