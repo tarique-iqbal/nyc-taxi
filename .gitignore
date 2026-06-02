@@ -45,10 +45,10 @@ dmypy.json
 *~
 
 # Data - raw and rejected data should not be committed
-data/raw/
-data/rejected/
-# Keep reference data
-!data/reference/
+data/raw/*
+!data/raw/.gitkeep
+data/rejected/*
+!data/rejected/.gitkeep
 
 # Logs
 *.log
