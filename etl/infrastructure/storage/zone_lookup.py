@@ -145,9 +145,7 @@ class CsvZoneRepository:
             RuntimeError: if load() has not been called yet.
         """
         if not self._loaded:
-            raise RuntimeError(
-                "CsvZoneRepository.load() must be called before load_all()."
-            )
+            raise RuntimeError("CsvZoneRepository.load() must be called before load_all().")
         return dict(self._zones)
 
     @property

@@ -20,6 +20,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Sub-configs
 
+
 class KafkaSettings(BaseSettings):
     """Kafka broker and topic configuration."""
 
@@ -110,9 +111,7 @@ class MonitoringSettings(BaseSettings):
         upper = v.upper()
         if upper not in allowed:
             allowed_str = ", ".join(allowed)
-            raise ValueError(
-                f"LOG_LEVEL must be one of: {allowed_str}. Got '{v}'."
-            )
+            raise ValueError(f"LOG_LEVEL must be one of: {allowed_str}. Got '{v}'.")
         return upper
 
 
@@ -148,6 +147,7 @@ class ETLSettings(BaseSettings):
 
 
 # Master settings - aggregates all sub-configs
+
 
 class Settings(BaseSettings):
     """
