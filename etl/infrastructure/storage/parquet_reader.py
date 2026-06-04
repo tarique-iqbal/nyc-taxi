@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Generator, Iterator
 from pathlib import Path
-from typing import Generator, Iterator
 
 import pyarrow as pa
 import pyarrow.parquet as pq
