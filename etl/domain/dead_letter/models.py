@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Optional
 
 
 class DeadLetterStage(str, Enum):
@@ -46,7 +45,7 @@ class DeadLetterRecord:
     batch_id: str
     source_file: str
     trip_id: str | None = None
-    failed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    failed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     retry_count: int = 0
 
     @classmethod
