@@ -71,8 +71,6 @@ class KafkaEventPublisher:
             topic:    Target Kafka topic name.
             messages: List of trip dicts (from Trip.to_dict()).
         """
-        delivered = 0
-        errors = 0
 
         for message in messages:
             key = str(message.get("trip_id", "")).encode("utf-8") or None

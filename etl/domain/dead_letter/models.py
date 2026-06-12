@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 
 
-class DeadLetterStage(str, Enum):
+class DeadLetterStage(StrEnum):
     """
     The pipeline stage that produced a dead letter record.
 

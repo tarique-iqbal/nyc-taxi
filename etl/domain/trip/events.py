@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 
 
-class ProcessingStage(str, Enum):
+class ProcessingStage(StrEnum):
     """The pipeline stage at which a trip event was raised."""
 
     PARSING = "parsing"
