@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS taxi.trips_hourly_mv
     hour                    DateTime,
     vendor_id               LowCardinality(String),
     trip_count              AggregateFunction(count),
-    total_fare              AggregateFunction(sum, Decimal(10, 2)),
-    avg_fare                AggregateFunction(avg, Decimal(10, 2)),
+    total_fare              AggregateFunction(sum, Decimal(9, 2)),
+    avg_fare                AggregateFunction(avg, Decimal(9, 2)),
     total_distance          AggregateFunction(sum, Float32),
     avg_distance            AggregateFunction(avg, Float32),
     avg_duration_seconds    AggregateFunction(avg, UInt32),
@@ -41,9 +41,9 @@ CREATE TABLE IF NOT EXISTS taxi.trips_daily_mv
     vendor_id               LowCardinality(String),
     payment_type            LowCardinality(String),
     trip_count              AggregateFunction(count),
-    total_fare              AggregateFunction(sum, Decimal(10, 2)),
-    avg_fare                AggregateFunction(avg, Decimal(10, 2)),
-    avg_tip                 AggregateFunction(avg, Decimal(10, 2)),
+    total_fare              AggregateFunction(sum, Decimal(9, 2)),
+    avg_fare                AggregateFunction(avg, Decimal(9, 2)),
+    avg_tip                 AggregateFunction(avg, Decimal(9, 2)),
     total_distance          AggregateFunction(sum, Float32),
     avg_distance            AggregateFunction(avg, Float32),
     avg_duration_seconds    AggregateFunction(avg, UInt32)
@@ -75,8 +75,8 @@ CREATE TABLE IF NOT EXISTS taxi.trips_by_borough_mv
     pickup_borough          LowCardinality(String),
     dropoff_borough         LowCardinality(String),
     trip_count              AggregateFunction(count),
-    total_fare              AggregateFunction(sum, Decimal(10, 2)),
-    avg_fare                AggregateFunction(avg, Decimal(10, 2)),
+    total_fare              AggregateFunction(sum, Decimal(9, 2)),
+    avg_fare                AggregateFunction(avg, Decimal(9, 2)),
     avg_distance            AggregateFunction(avg, Float32)
 )
 ENGINE = AggregatingMergeTree()
@@ -102,8 +102,8 @@ CREATE TABLE IF NOT EXISTS taxi.trips_by_payment_mv
     day                     Date,
     payment_type            LowCardinality(String),
     trip_count              AggregateFunction(count),
-    total_fare              AggregateFunction(sum, Decimal(10, 2)),
-    avg_tip                 AggregateFunction(avg, Decimal(10, 2))
+    total_fare              AggregateFunction(sum, Decimal(9, 2)),
+    avg_tip                 AggregateFunction(avg, Decimal(9, 2))
 )
 ENGINE = AggregatingMergeTree()
 PARTITION BY toYYYYMM(day)
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS taxi.trips_by_zone_mv
     pickup_zone             LowCardinality(String),
     pickup_borough          LowCardinality(String),
     trip_count              AggregateFunction(count),
-    avg_fare                AggregateFunction(avg, Decimal(10, 2))
+    avg_fare                AggregateFunction(avg, Decimal(9, 2))
 )
 ENGINE = AggregatingMergeTree()
 PARTITION BY toYYYYMM(day)
