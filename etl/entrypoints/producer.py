@@ -44,7 +44,7 @@ def _build_dead_letter_service(components: AppComponents) -> DeadLetterService:
     import this module for inspection without triggering the import.
     """
     from etl.infrastructure.kafka.dead_letter_publisher import (
-        KafkaDeadLetterPublisher,  # noqa: PLC0415
+        KafkaDeadLetterPublisher,
     )
     settings = components.settings
     return KafkaDeadLetterPublisher(

@@ -26,7 +26,7 @@ def _parse_datetime(value: object, field_name: str) -> datetime:
         dt = value
     else:
         try:
-            import pandas as pd  # noqa: PLC0415
+            import pandas as pd
 
             dt = pd.Timestamp(value).to_pydatetime()
         except Exception as exc:
