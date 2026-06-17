@@ -64,6 +64,7 @@ ignore_missing_imports = true
 plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "--cov=etl --cov-report=term-missing --cov-report=html"
