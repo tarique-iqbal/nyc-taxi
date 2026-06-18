@@ -1,0 +1,26 @@
+LocationID,Borough,Zone,service_zone
+1,EWR,Newark Airport,EWR
+2,Queens,Jamaica Bay,Boro Zone
+3,Bronx,Allerton/Pelham Gardens,Boro Zone
+4,Manhattan,Alphabet City,Yellow Zone
+5,Staten Island,Arden Heights,Boro Zone
+6,Staten Island,Arrochar/Fort Wadsworth,Boro Zone
+7,Queens,Astoria,Boro Zone
+8,Queens,Astoria Park,Boro Zone
+9,Queens,Auburndale,Boro Zone
+10,Queens,Baisley Park,Boro Zone
+132,Queens,JFK Airport,Airports
+138,Queens,LaGuardia Airport,Airports
+161,Manhattan,Midtown Center,Yellow Zone
+162,Manhattan,Midtown East,Yellow Zone
+163,Manhattan,Midtown North,Yellow Zone
+186,Manhattan,Penn Station/Madison Sq West,Yellow Zone
+230,Manhattan,Times Sq/Theatre District,Yellow Zone
+236,Manhattan,Upper East Side North,Yellow Zone
+237,Manhattan,Upper East Side South,Yellow Zone
+238,Manhattan,Upper West Side North,Yellow Zone
+239,Manhattan,Upper West Side South,Yellow Zone
+249,Manhattan,West Village,Yellow Zone
+261,Manhattan,World Trade Center,Yellow Zone
+262,Manhattan,Yorkville East,Yellow Zone
+263,Manhattan,Yorkville West,Yellow Zone
