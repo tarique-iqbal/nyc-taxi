@@ -67,7 +67,15 @@ plugins = ["pydantic.mypy"]
 pythonpath = ["."]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "--cov=etl --cov-report=term-missing --cov-report=html"
+markers = [
+    "integration: mark a test as an integration test"
+]
+addopts = """
+    --cov=etl \
+    --cov-report=term-missing \
+    --cov-report=html \
+    -W ignore::DeprecationWarning:opentelemetry.util._importlib_metadata \
+"""
 
 [tool.coverage.run]
 source = ["etl"]
