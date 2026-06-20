@@ -78,22 +78,26 @@ def _coerce_row(row: dict[str, Any]) -> dict[str, Any]:
 
 class ColumnarInserter:
     """
-    Converts a list of trip dicts to a columnar DataFrame and inserts
+    Converts a list of trip dicts to a columnar Arrow Table and inserts
     into ClickHouse using the native columnar protocol.
 
     Pipeline:
-      list[dict] -> PyArrow Table (with explicit schema) -> pandas DataFrame
-                 -> ClickHouseClient.insert_dataframe()
+      list[dict] -> PyArrow Table (with explicit schema)
+                 -> columnar Python lists via to_pylist()
+                 -> ClickHouseClient.execute(columnar=True)
 
-    Why columnar is 10-50x faster than row-based:
-      ClickHouse stores data column by column on disk. Sending data in
-      columnar format means it arrives in the exact layout ClickHouse
-      needs to write -- no transposition on the server side.
-      Row-based INSERT requires ClickHouse to transpose every batch.
+    Why bypass pandas:
+      clickhouse_driver's insert_dataframe calls .values on each DataFrame
+      column expecting a numpy ndarray. pandas 2.0+ maps pa.string() to
+      ArrowStringArray (dtype='str'), whose .values is an ArrowExtensionArray,
+      not an ndarray -- causing a TypeError at insert time.
 
-    The explicit Arrow schema (TRIPS_ARROW_SCHEMA) prevents type widening
-    where Python's type inference picks int64 for a UInt8 column, which
-    causes clickhouse-driver to reject the insert.
+      Extracting columnar data via PyArrow's to_pylist() produces plain
+      Python lists that clickhouse_driver accepts natively, with no pandas
+      dtype negotiation involved.
+
+    The explicit Arrow schema (TRIPS_ARROW_SCHEMA) is still used to enforce
+    types during table construction before extraction.
     """
 
     TABLE = "taxi.trips"
@@ -103,7 +107,16 @@ class ColumnarInserter:
 
     def insert(self, rows: list[dict[str, Any]]) -> None:
         """
-        Convert rows to columnar format and insert into taxi.trips.
+        Coerce and insert trip dicts into taxi.trips using the columnar protocol.
+
+        Pipeline:
+        list[dict] -> coerce types -> PyArrow Table -> per-column Python lists
+                    -> clickhouse_driver execute(columnar=True)
+
+        Bypasses pandas entirely: to_pylist() produces plain Python lists which
+        clickhouse_driver's columnar path requires. The pandas path fails because
+        clickhouse_driver's column_chunks() rejects both ArrowStringArray and
+        numpy ndarray -- only list and tuple are accepted.
 
         Empty list is a no-op -- no round-trip to ClickHouse.
         """
@@ -112,11 +125,12 @@ class ColumnarInserter:
 
         coerced = [_coerce_row(row) for row in rows]
         table = pa.Table.from_pylist(coerced, schema=TRIPS_ARROW_SCHEMA)
-        dataframe = table.to_pandas()
+        columnar_data = [table[name].to_pylist() for name in table.column_names]
 
-        self._client.insert_dataframe(
-            table=self.TABLE,
-            dataframe=dataframe,
+        self._client.execute(
+            f"INSERT INTO {self.TABLE} VALUES",
+            columnar_data,
+            columnar=True,
         )
 
         logger.debug(
