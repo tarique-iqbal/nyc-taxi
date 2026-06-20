@@ -91,7 +91,7 @@ etl/
 
 - **ReplacingMergeTree** — idempotent ClickHouse inserts; safe to replay Kafka messages
 - **Manual Kafka offset commit** — offset advances only after ClickHouse confirms insert
-- **Columnar insert via PyArrow** — 10–50× faster than row-based inserts
+- **Columnar protocol insert** — faster than row-based
 - **Correlation IDs** — every log line for a batch shares one UUID for easy tracing
 - **Graceful shutdown** — SIGTERM finishes current batch before exit; no mid-insert loss
 - **DLQ dual-write** — failed records go to both Kafka DLQ topic and `data/rejected/` on disk
