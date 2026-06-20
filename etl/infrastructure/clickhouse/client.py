@@ -72,22 +72,22 @@ class ClickHouseClient:
         return True
 
     @retry(**RetryConfig.CLICKHOUSE_INSERT, exceptions=(ClickHouseError, OSError))
-    def execute(self, query: str, params: Any = None) -> list[Any]:
+    def execute(self, query: str, params: Any = None, **kwargs: Any) -> list[Any]:
         """
         Execute a query and return rows.
 
-        Used for DDL (CREATE TABLE, migrations) and SELECT queries.
-        Not used for bulk inserts -- use insert_dataframe() for those.
+        Used for DDL, SELECT queries, and columnar inserts (columnar=True).
         """
-        return self._client.execute(query, params or {})
+        return self._client.execute(query, params or {}, **kwargs)
 
     @retry(**RetryConfig.CLICKHOUSE_INSERT, exceptions=(ClickHouseError, OSError))
     def execute_many(self, query: str, rows: Sequence[Any]) -> None:
         """
-        Execute an INSERT with a sequence of row tuples.
+        Row-based INSERT for small, ad-hoc writes.
 
-        Fallback for cases where columnar insert is not suitable.
-        For production inserts use insert_dataframe() via ColumnarInserter.
+        Suitable for metadata tables, audit logs, or test fixtures
+        where batch size is small and columnar overhead isn't justified.
+        For bulk trip inserts use ColumnarInserter.
         """
         self._client.execute(query, rows)
 
@@ -99,13 +99,13 @@ class ClickHouseClient:
         column_names: list[str] | None = None,
     ) -> None:
         """
-        Insert a pandas DataFrame using ClickHouse's columnar protocol.
+        Insert a pandas DataFrame via clickhouse_driver's insert_dataframe().
 
-        Columnar format (Arrow -> DataFrame) matches ClickHouse's internal
-        storage layout so data travels over the wire in the same format it
-        will be stored. 10-50x faster than row-based INSERT for bulk loads.
+        NOT used by ColumnarInserter, which bypasses pandas via PyArrow's to_pylist().
 
-        column_names is inferred from DataFrame.columns if not provided.
+        KNOWN CONSTRAINT: pandas 2.0+ maps string columns to ArrowStringArray whose
+        .values is not a numpy ndarray. Pre-coerce string columns to object dtype
+        before calling, or use ColumnarInserter.insert() instead.
         """
         self._client.insert_dataframe(
             f"INSERT INTO {table} VALUES",
