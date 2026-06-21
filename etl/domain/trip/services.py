@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime
 
 from etl.domain.trip.deduplicator import TripDeduplicator, generate_trip_id
 from etl.domain.trip.enrichers import TripEnricher
@@ -11,29 +11,21 @@ from etl.domain.trip.models import Distance, Duration, Payment, Trip
 from etl.domain.trip.normalizers import TripNormalizer
 from etl.domain.trip.repositories import ZoneRepository
 from etl.domain.trip.validators import TripValidator
+from etl.utils.datetime import parse_timestamp
 
 logger = logging.getLogger(__name__)
 
 
 def _parse_datetime(value: object, field_name: str) -> datetime:
-    """
-    Coerce a raw value to a UTC-aware datetime.
+    dt = parse_timestamp(value)
 
-    PyArrow yields Parquet timestamp columns as pandas Timestamps or
-    Python datetimes. Both cases are handled here.
-    """
-    if isinstance(value, datetime):
-        dt = value
-    else:
-        try:
-            import pandas as pd
+    if dt is None:
+        raise TripParseError(
+            field_name,
+            value,
+            "cannot convert to datetime",
+        )
 
-            dt = pd.Timestamp(value).to_pydatetime()
-        except Exception as exc:
-            raise TripParseError(field_name, value, f"cannot convert to datetime: {exc}") from exc
-
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=UTC)
     return dt
 
 
