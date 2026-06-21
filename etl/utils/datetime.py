@@ -4,6 +4,18 @@ from datetime import UTC, datetime
 from typing import Any
 
 
+def _from_epoch(value: float) -> datetime:
+    """
+    Convert epoch timestamp to UTC datetime.
+
+    Heuristic:
+    1e12 - milliseconds (NYC TLC parquet format) else seconds
+    """
+    if value > 1e12:
+        return datetime.fromtimestamp(value / 1000, tz=UTC)
+    return datetime.fromtimestamp(value, tz=UTC)
+
+
 def to_utc(dt: datetime) -> datetime:
     """
     Return a UTC-aware datetime from a naive or offset-aware datetime.
@@ -18,21 +30,24 @@ def to_utc(dt: datetime) -> datetime:
 
 def parse_timestamp(value: Any) -> datetime | None:
     """
-    Coerce a raw Parquet timestamp value to a UTC-aware datetime.
+    Normalize all incoming timestamp formats into UTC-aware datetime.
 
-    PyArrow yields Parquet timestamp columns as one of:
-      - datetime objects (standard Python)
-      - pandas Timestamp objects
-      - numpy datetime64 scalars
-
-    Returns None if the value is None or cannot be parsed, so callers
-    can decide whether a missing timestamp is a parse error or a default.
+    Supports:
+    - pandas Timestamp
+    - python datetime
+    - numpy datetime64
+    - epoch milliseconds (preferred for this dataset)
+    - epoch seconds (fallback)
     """
+
     if value is None:
         return None
 
     if isinstance(value, datetime):
-        return to_utc(value)
+        return value if value.tzinfo else value.replace(tzinfo=UTC)
+
+    if isinstance(value, (int, float)):
+        return _from_epoch(value)
 
     try:
         import pandas as pd
@@ -40,8 +55,10 @@ def parse_timestamp(value: Any) -> datetime | None:
         ts = pd.Timestamp(value)
         if pd.isna(ts):
             return None
+
         dt = ts.to_pydatetime()
-        return to_utc(dt)
+        return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
+
     except Exception:
         return None
 
