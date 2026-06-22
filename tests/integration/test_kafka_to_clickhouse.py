@@ -97,10 +97,8 @@ def test_producer_publishes_valid_trips(
 
 def test_consumer_inserts_trips_into_clickhouse(
     domain_service,
-    kafka_producer,
     trip_repository,
     ch_client,
-    settings,
     cleanup_batch,
 ):
     batch_id = cleanup_batch
