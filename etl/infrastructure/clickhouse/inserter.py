@@ -7,6 +7,7 @@ from typing import Any
 import pyarrow as pa
 
 from etl.infrastructure.clickhouse.client import ClickHouseClient
+from etl.utils.datetime import parse_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +51,9 @@ def _coerce_row(row: dict[str, Any]) -> dict[str, Any]:
     """
     Coerce types in a trip dict to match the Arrow schema.
 
-    Decimal amounts are cast to float (acceptable precision for
-    fare values in transit). datetime without tzinfo is assumed UTC.
-    None values for numeric fields default to 0 to prevent Arrow
-    null handling from widening the column type.
+    Handles both Parquet-sourced dicts (datetime objects) and
+    Kafka-sourced dicts (ISO 8601 strings) for datetime fields.
+    Decimal amounts cast to float. None numeric values default to 0.
     """
     coerced = dict(row)
 
@@ -66,8 +66,11 @@ def _coerce_row(row: dict[str, Any]) -> dict[str, Any]:
 
     for dt_field in ("pickup_datetime", "dropoff_datetime", "ingested_at"):
         v = coerced.get(dt_field)
+        if isinstance(v, str):
+            v = parse_timestamp(v)
         if isinstance(v, datetime) and v.tzinfo is None:
-            coerced[dt_field] = v.replace(tzinfo=UTC)
+            v = v.replace(tzinfo=UTC)
+        coerced[dt_field] = v
 
     for uint_field in ("passenger_count",):
         v = coerced.get(uint_field)
