@@ -5,8 +5,6 @@ from datetime import UTC, datetime
 from etl.domain.trip.deduplicator import TripDeduplicator, generate_trip_id
 from etl.domain.trip.models import Distance, Duration, Money, Payment, Trip
 
-# Helpers
-
 _PICKUP = datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC)
 _DROPOFF = datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
 
@@ -46,7 +44,6 @@ def _make_trip(
 
 
 # generate_trip_id
-
 def test_generate_trip_id_is_deterministic():
     id_a = generate_trip_id("CMT", _PICKUP, _DROPOFF, 132)
     id_b = generate_trip_id("CMT", _PICKUP, _DROPOFF, 132)
@@ -86,7 +83,6 @@ def test_generate_trip_id_returns_sha256_hex():
 
 
 # TripDeduplicator
-
 def test_no_duplicates_returns_all_trips():
     dedup = TripDeduplicator()
     trips = [_make_trip("id-1"), _make_trip("id-2"), _make_trip("id-3")]

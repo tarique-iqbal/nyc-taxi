@@ -6,8 +6,8 @@ import pytest
 
 from etl.runtime.retry import RetryConfig, retry
 
-# Succeeds immediately
 
+# Succeeds immediately
 def test_succeeds_on_first_attempt():
     calls = []
 
@@ -22,7 +22,6 @@ def test_succeeds_on_first_attempt():
 
 
 # Retries then succeeds
-
 def test_retries_and_succeeds_on_third_attempt():
     counter = {"n": 0}
 
@@ -41,7 +40,6 @@ def test_retries_and_succeeds_on_third_attempt():
 
 
 # Exhausts attempts and re-raises
-
 def test_reraises_after_max_attempts():
     @retry(max_attempts=3, delay=0, exceptions=(RuntimeError,))
     def fn():
@@ -66,7 +64,6 @@ def test_attempt_count_matches_max_attempts():
 
 
 # reraise=False
-
 def test_reraise_false_returns_none_after_exhaustion():
     @retry(max_attempts=2, delay=0, exceptions=(ValueError,), reraise=False)
     def fn():
@@ -79,7 +76,6 @@ def test_reraise_false_returns_none_after_exhaustion():
 
 
 # Only catches specified exceptions
-
 def test_uncaught_exception_propagates_immediately():
     counter = {"n": 0}
 
@@ -95,7 +91,6 @@ def test_uncaught_exception_propagates_immediately():
 
 
 # Exponential backoff
-
 def test_exponential_backoff_delays():
     @retry(max_attempts=3, delay=1.0, backoff=2.0, exceptions=(ValueError,))
     def fn():
@@ -121,7 +116,6 @@ def test_no_sleep_on_last_attempt():
 
 
 # Return value preserved
-
 def test_return_value_passed_through():
     @retry(max_attempts=3, delay=0, exceptions=(ValueError,))
     def fn():
@@ -131,7 +125,6 @@ def test_return_value_passed_through():
 
 
 # RetryConfig constants
-
 def test_retry_config_kafka_publish_has_expected_keys():
     assert "max_attempts" in RetryConfig.KAFKA_PUBLISH
     assert "delay" in RetryConfig.KAFKA_PUBLISH
@@ -144,7 +137,6 @@ def test_retry_config_clickhouse_insert_has_expected_keys():
 
 
 # Wraps preserves function metadata
-
 def test_retry_preserves_function_name():
     @retry(max_attempts=2, delay=0, exceptions=(ValueError,))
     def my_function():

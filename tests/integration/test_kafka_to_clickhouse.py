@@ -33,8 +33,6 @@ pytestmark = [requires_clickhouse, requires_kafka, pytest.mark.integration]
 EXPECTED_VALID_COUNT = 5
 
 
-# Helpers
-
 def _read_parquet_rows(path: Path) -> list[dict]:
     from etl.infrastructure.storage.parquet_reader import ParquetReader
     rows = []
@@ -65,8 +63,6 @@ def _wait_for_rows(ch_client, batch_id: str, expected: int, timeout: int = 15) -
     return _query_batch(ch_client, batch_id)
 
 
-# Test: producer publishes all valid trips to Kafka
-
 def test_producer_publishes_valid_trips(
     domain_service,
     kafka_producer,
@@ -93,8 +89,6 @@ def test_producer_publishes_valid_trips(
     kafka_producer.flush()
 
 
-# Test: consumer receives trips and inserts into ClickHouse
-
 def test_consumer_inserts_trips_into_clickhouse(
     domain_service,
     trip_repository,
@@ -117,8 +111,6 @@ def test_consumer_inserts_trips_into_clickhouse(
     persisted = _wait_for_rows(ch_client, batch_id, EXPECTED_VALID_COUNT)
     assert len(persisted) == EXPECTED_VALID_COUNT
 
-
-# Test: zone enrichment populated correctly
 
 def test_zone_enrichment_populated_in_clickhouse(
     domain_service,
@@ -155,8 +147,6 @@ def test_zone_enrichment_populated_in_clickhouse(
     assert jfk[7] == "JFK"
 
 
-# Test: normaliser applied before insert
-
 def test_normalised_fields_in_clickhouse(
     domain_service,
     trip_repository,
@@ -189,8 +179,6 @@ def test_normalised_fields_in_clickhouse(
     assert 1 not in payment_types
 
 
-# Test: fare amounts stored correctly
-
 def test_fare_amounts_stored_correctly(
     domain_service,
     trip_repository,
@@ -218,8 +206,6 @@ def test_fare_amounts_stored_correctly(
     assert abs(total_amounts[0] - 13.30) < 0.01
     assert abs(total_amounts[4] - 66.05) < 0.01
 
-
-# Test: trip_id is deterministic (idempotent re-insert)
 
 def test_duplicate_insert_deduplicated_by_replacing_merge_tree(
     domain_service,
@@ -254,8 +240,6 @@ def test_duplicate_insert_deduplicated_by_replacing_merge_tree(
         f"Expected {EXPECTED_VALID_COUNT} after dedup, got {len(persisted)}"
     )
 
-
-# Test: within-batch duplicates removed before insert
 
 def test_within_batch_duplicates_removed_before_clickhouse(
     domain_service,
@@ -295,8 +279,6 @@ def test_within_batch_duplicates_removed_before_clickhouse(
     persisted = _wait_for_rows(ch_client, batch_id, EXPECTED_VALID_COUNT)
     assert len(persisted) == EXPECTED_VALID_COUNT
 
-
-# Test: source_file and batch_id persisted as metadata
 
 def test_etl_metadata_persisted(
     domain_service,

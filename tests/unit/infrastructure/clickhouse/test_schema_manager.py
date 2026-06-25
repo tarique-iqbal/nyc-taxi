@@ -6,7 +6,6 @@ from unittest.mock import MagicMock
 
 from etl.infrastructure.clickhouse.schema_manager import SchemaManager
 
-# Helpers
 
 def _sha256(sql: str) -> str:
     return hashlib.sha256(sql.encode("utf-8")).hexdigest()
@@ -19,7 +18,6 @@ def _write_migration(dir_: Path, filename: str, sql: str) -> Path:
 
 
 # _checksum
-
 def test_checksum_is_deterministic():
     sql = "CREATE TABLE IF NOT EXISTS taxi.trips (id String) ENGINE = Memory"
     c1 = SchemaManager._checksum(sql)
@@ -46,7 +44,6 @@ def test_checksum_matches_sha256():
 
 
 # _discover_migrations
-
 def test_discover_migrations_sorted_by_filename(tmp_path):
     _write_migration(tmp_path, "003_extra.sql", "SELECT 3")
     _write_migration(tmp_path, "001_initial.sql", "SELECT 1")
@@ -87,7 +84,6 @@ def test_discover_migrations_empty_directory_returns_empty(tmp_path):
 
 
 # apply_all: fresh run
-
 def test_apply_all_creates_tracking_table(tmp_path):
     sql = "CREATE TABLE IF NOT EXISTS taxi.trips (id String) ENGINE = Memory;"
     _write_migration(tmp_path, "001_initial.sql", sql)
@@ -147,7 +143,6 @@ def test_apply_all_multi_statement_sql_split_on_semicolons(tmp_path):
 
 
 # apply_all: already applied
-
 def test_apply_all_skips_already_applied_migration(tmp_path):
     sql = "CREATE TABLE IF NOT EXISTS taxi.trips (id String) ENGINE = Memory;"
     _write_migration(tmp_path, "001_initial.sql", sql)
@@ -183,7 +178,6 @@ def test_apply_all_applies_only_new_migrations(tmp_path):
 
 
 # apply_all: checksum mismatch
-
 def test_apply_all_logs_warning_on_checksum_mismatch(tmp_path, caplog):
     import logging
     sql = "CREATE TABLE IF NOT EXISTS taxi.trips (id String) ENGINE = Memory;"
@@ -216,7 +210,6 @@ def test_apply_all_does_not_reapply_on_checksum_mismatch(tmp_path):
 
 
 # applied_versions
-
 def test_applied_versions_returns_sorted_list(tmp_path):
     client = MagicMock()
     client.execute.side_effect = [
@@ -236,7 +229,6 @@ def test_applied_versions_empty_when_none_applied(tmp_path):
 
 
 # apply_all: no migrations
-
 def test_apply_all_with_empty_migrations_dir_does_not_raise(tmp_path):
     client = MagicMock()
     client.execute.side_effect = [None, []]

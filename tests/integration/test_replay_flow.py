@@ -40,8 +40,6 @@ VALID_COUNT = 5
 INVALID_COUNT = 5
 
 
-# Helpers
-
 def _read_parquet_rows(path: Path) -> list[dict]:
     from etl.infrastructure.storage.parquet_reader import ParquetReader
     rows = []
@@ -104,7 +102,6 @@ def _build_replay_use_case(domain_service, kafka_producer, settings, output_dir:
 
 
 # Recoverable records
-
 def test_valid_records_recovered_on_replay(
     domain_service,
     kafka_producer,
@@ -165,7 +162,6 @@ def test_recovered_records_not_re_written_to_output(
 
 
 # Unrecoverable records
-
 def test_invalid_records_remain_in_dlq_after_replay(
     domain_service,
     kafka_producer,
@@ -229,7 +225,6 @@ def test_retry_count_incremented_on_replay(
 
 
 # Mixed recovery
-
 def test_mixed_recovery_rate(
     domain_service,
     kafka_producer,
@@ -268,7 +263,6 @@ def test_mixed_recovery_rate(
 
 
 # Batch ID filter
-
 def test_replay_filters_by_batch_id(
     domain_service,
     kafka_producer,
@@ -318,7 +312,6 @@ def test_replay_filters_by_batch_id(
 
 
 # Edge cases
-
 def test_empty_rejected_dir_completes_with_zero_totals(
     domain_service,
     kafka_producer,

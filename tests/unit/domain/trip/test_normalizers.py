@@ -8,8 +8,8 @@ from etl.domain.trip.normalizers import (
     TripNormalizer,
 )
 
-# Vendor
 
+# Vendor
 def test_vendor_1_mapped():
     result = TripNormalizer.normalize({"vendor_id": 1})
     assert result["vendor_id"] == "Creative Mobile Technologies"
@@ -36,7 +36,6 @@ def test_vendor_string_none_returns_unknown():
 
 
 # Payment type
-
 @pytest.mark.parametrize("code,expected", [
     (1, "Credit card"),
     (2, "Cash"),
@@ -61,7 +60,6 @@ def test_payment_type_none():
 
 
 # Rate code
-
 @pytest.mark.parametrize("code,expected", [
     (1, "Standard"),
     (2, "JFK"),
@@ -92,7 +90,6 @@ def test_rate_code_none():
 
 
 # Passenger count
-
 def test_passenger_count_none_defaults_to_one():
     result = TripNormalizer.normalize({"passenger_count": None})
     assert result["passenger_count"] == DEFAULT_PASSENGER_COUNT
@@ -114,7 +111,6 @@ def test_passenger_count_float_coerced():
 
 
 # Store and forward flag
-
 @pytest.mark.parametrize("raw,expected", [
     ("Y", "Yes"),
     ("N", "No"),
@@ -137,7 +133,6 @@ def test_store_and_fwd_flag_unexpected_value_returns_unknown():
 
 
 # Input dict is not mutated
-
 def test_normalize_does_not_mutate_input():
     raw = {"vendor_id": 1, "payment_type": 2, "passenger_count": None}
     original = dict(raw)
@@ -146,7 +141,6 @@ def test_normalize_does_not_mutate_input():
 
 
 # Full normalize output has expected keys
-
 def test_normalize_returns_all_normalised_keys():
     raw = {
         "vendor_id": 1,

@@ -4,8 +4,6 @@ from datetime import UTC, datetime
 
 from etl.application.services.validation_service import ValidationService
 
-# Helpers
-
 _PICKUP = datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC)
 _DROPOFF = datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
 
@@ -22,7 +20,6 @@ def _valid_row(**overrides: object) -> dict:
 
 
 # validate_raw: valid
-
 def test_valid_row_passes():
     svc = ValidationService()
     ok, error = svc.validate_raw(_valid_row())
@@ -74,7 +71,6 @@ def test_optional_fields_present_passes():
 
 
 # validate_raw: missing required fields
-
 def test_missing_pickup_datetime_fails():
     svc = ValidationService()
     row = {
@@ -125,7 +121,6 @@ def test_missing_dropoff_location_id_fails():
 
 
 # validate_raw: cross-field validator
-
 def test_dropoff_equal_to_pickup_fails():
     svc = ValidationService()
     ok, error = svc.validate_raw(_valid_row(dropoff_datetime=_PICKUP))
@@ -150,7 +145,6 @@ def test_dropoff_one_second_after_pickup_passes():
 
 
 # validate_raw: location_id validator
-
 def test_zero_pickup_location_id_fails():
     svc = ValidationService()
     ok, error = svc.validate_raw(_valid_row(pickup_location_id=0))
@@ -172,7 +166,6 @@ def test_positive_location_ids_pass():
 
 
 # validate_batch
-
 def test_validate_batch_all_valid():
     svc = ValidationService()
     rows = [_valid_row(), _valid_row(), _valid_row()]

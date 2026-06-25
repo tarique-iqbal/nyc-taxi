@@ -8,8 +8,6 @@ from etl.domain.trip.events import InvalidTripDetected, ProcessingStage
 from etl.domain.trip.models import Distance, Duration, Money, Payment, Trip
 from etl.runtime.shutdown import ShutdownHandler
 
-# Helpers
-
 _PICKUP = datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC)
 _DROPOFF = datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
 
@@ -107,7 +105,6 @@ def _make_service(
 
 
 # IngestionSummary
-
 def test_summary_reject_rate_zero_when_no_rows():
     s = IngestionSummary(source_file="test.parquet")
     assert s.reject_rate == 0.0
@@ -149,7 +146,6 @@ def test_summary_as_dict_keys():
 
 
 # IngestionService.run: basic flow
-
 def test_run_returns_summary():
     service, _, _, _ = _make_service()
     summary = service.run()
@@ -184,7 +180,6 @@ def test_run_counts_total_rows():
 
 
 # IngestionService.run: valid trips
-
 def test_run_publishes_valid_trips():
     trips = [_make_trip("id-1"), _make_trip("id-2")]
     service, publisher, _, _ = _make_service(valid_trips=trips)
@@ -206,7 +201,6 @@ def test_run_does_not_publish_when_no_valid_trips():
 
 
 # IngestionService.run: invalid records
-
 def test_run_dead_letters_invalid_domain_records():
     events = [_make_invalid_event("bad-1"), _make_invalid_event("bad-2")]
     service, _, dl_service, _ = _make_service(invalid_events=events)
@@ -229,7 +223,6 @@ def test_run_does_not_dead_letter_when_no_invalid():
 
 
 # IngestionService.run: schema validation
-
 def test_run_dead_letters_schema_rejected_rows():
     bad_row = {"vendor_id": 1}
     service, _, dl_service, _ = _make_service(
@@ -263,7 +256,6 @@ def test_run_schema_rejected_not_passed_to_domain_service():
 
 
 # IngestionService.run: shutdown
-
 def test_run_stops_when_shutdown_requested_before_batch():
     reader = _make_reader([[{"r": 1}], [{"r": 2}], [{"r": 3}]])
     domain_service = _make_domain_service()
@@ -313,7 +305,6 @@ def test_run_flush_called_even_after_shutdown():
 
 
 # IngestionService.run: multiple batches accumulate correctly
-
 def test_run_accumulates_counts_across_batches():
     reader = _make_reader([[{"r": 1}, {"r": 2}], [{"r": 3}, {"r": 4}, {"r": 5}]])
     trips_b1 = [_make_trip("t1")]

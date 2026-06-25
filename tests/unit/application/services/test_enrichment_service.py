@@ -8,7 +8,6 @@ import pytest
 from etl.application.services.enrichment_service import EnrichmentService
 from etl.domain.trip.models import Distance, Duration, Money, Payment, Trip, Zone
 
-# Helpers
 
 def _make_zone_repository(is_loaded: bool = True, zone_count: int = 265) -> MagicMock:
     repo = MagicMock()
@@ -57,7 +56,6 @@ def _make_trip(trip_id: str = "abc123") -> Trip:
 
 
 # ensure_loaded
-
 def test_ensure_loaded_passes_when_repo_is_loaded():
     repo = _make_zone_repository(is_loaded=True)
     svc = EnrichmentService(zone_repository=repo)
@@ -78,7 +76,6 @@ def test_ensure_loaded_passes_when_is_loaded_attribute_absent():
 
 
 # enrich_batch
-
 def test_enrich_batch_populates_zone_fields():
     repo = _make_zone_repository()
     repo.get_by_id.side_effect = lambda loc_id: Zone(
@@ -129,7 +126,6 @@ def test_enrich_batch_unknown_zone_does_not_raise():
 
 
 # reload
-
 def test_reload_calls_load_on_repository():
     repo = _make_zone_repository()
     svc = EnrichmentService(zone_repository=repo)
@@ -149,7 +145,6 @@ def test_reload_does_nothing_if_repo_has_no_load_method():
 
 
 # zone_count
-
 def test_zone_count_returns_repository_count():
     repo = _make_zone_repository(zone_count=265)
     svc = EnrichmentService(zone_repository=repo)

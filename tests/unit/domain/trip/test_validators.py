@@ -14,7 +14,6 @@ from etl.domain.trip.exceptions import (
 from etl.domain.trip.models import Distance, Duration, Money, Payment, Trip
 from etl.domain.trip.validators import MAX_TRIP_DURATION_SECONDS, TLC_MIN_DATE, TripValidator
 
-# Helpers
 
 def _payment(**overrides: object) -> Payment:
     defaults = dict(
@@ -57,13 +56,11 @@ def _trip(**overrides: object) -> Trip:
 
 
 # Valid trip
-
 def test_valid_trip_passes_all_rules():
     TripValidator.validate(_trip())
 
 
 # Duration
-
 def test_zero_duration_rejected():
     pickup = datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC)
     trip = _trip(
@@ -95,7 +92,6 @@ def test_duration_just_under_24h_passes():
 
 
 # Passenger count
-
 def test_zero_passengers_rejected():
     trip = _trip(passenger_count=0)
     with pytest.raises(InvalidPassengerCountError) as exc_info:
@@ -119,7 +115,6 @@ def test_nine_passengers_passes():
 
 
 # Pickup datetime
-
 def test_pickup_before_tlc_min_date_rejected():
     before_tlc = datetime(2008, 12, 31, 23, 59, 59, tzinfo=UTC)
     pickup = before_tlc
@@ -157,7 +152,6 @@ def test_future_pickup_rejected():
 
 
 # Money
-
 def test_negative_fare_amount_raises_at_construction():
     with pytest.raises(NegativeMoneyError) as exc_info:
         Money.of(-1.0, "fare_amount")

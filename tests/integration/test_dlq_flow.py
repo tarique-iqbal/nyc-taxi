@@ -34,8 +34,6 @@ EXPECTED_INVALID_COUNT = 5
 EXPECTED_VALID_COUNT = 5
 
 
-# Helpers
-
 def _read_parquet_rows(path: Path) -> list[dict]:
     from etl.infrastructure.storage.parquet_reader import ParquetReader
     rows = []
@@ -52,8 +50,6 @@ def _read_rejected_files(rejected_dir: Path) -> list[dict]:
     return records
 
 
-# All invalid rows rejected by domain pipeline
-
 def test_all_invalid_rows_rejected(domain_service, batch_id):
     raw_rows = _read_parquet_rows(INVALID_PARQUET)
 
@@ -66,8 +62,6 @@ def test_all_invalid_rows_rejected(domain_service, batch_id):
     assert len(valid_trips) == 0
     assert len(invalid_events) == EXPECTED_INVALID_COUNT
 
-
-# Error types match the known faults in the fixture
 
 def test_invalid_event_error_types(domain_service, batch_id):
     raw_rows = _read_parquet_rows(INVALID_PARQUET)
@@ -90,8 +84,6 @@ def test_invalid_event_error_types(domain_service, batch_id):
     assert "InvalidPickupDatetimeError" in error_types
 
 
-# Invalid events carry stage information
-
 def test_invalid_events_carry_validation_stage(domain_service, batch_id):
     from etl.domain.trip.events import ProcessingStage
 
@@ -105,8 +97,6 @@ def test_invalid_events_carry_validation_stage(domain_service, batch_id):
     stages = {e.stage for e in invalid_events}
     assert ProcessingStage.VALIDATION in stages
 
-
-# Invalid events preserve the original raw record
 
 def test_invalid_events_preserve_original_record(domain_service, batch_id):
     raw_rows = _read_parquet_rows(INVALID_PARQUET)
@@ -122,8 +112,6 @@ def test_invalid_events_preserve_original_record(domain_service, batch_id):
         # Raw record must contain pickup_datetime so replay is possible
         assert "pickup_datetime" in event.original_record
 
-
-# DLQ records written to disk
 
 def test_invalid_records_written_to_rejected_dir(
     domain_service,
@@ -147,8 +135,6 @@ def test_invalid_records_written_to_rejected_dir(
     on_disk = _read_rejected_files(tmp_rejected_dir)
     assert len(on_disk) == EXPECTED_INVALID_COUNT
 
-
-# Disk records are complete and deserialise correctly
 
 def test_rejected_records_have_required_fields(
     domain_service,
@@ -182,8 +168,6 @@ def test_rejected_records_have_required_fields(
         assert record["source_file"] == "invalid_trips.parquet"
 
 
-# One rejected file per batch_id on disk
-
 def test_rejected_file_named_by_batch_id(
     domain_service,
     dead_letter_service,
@@ -208,8 +192,6 @@ def test_rejected_file_named_by_batch_id(
     assert len(files) == 1
     assert batch_id in files[0].name
 
-
-# Mixed batch: valid trips to Kafka, invalid to DLQ
 
 def test_mixed_batch_routes_correctly(
     domain_service,
@@ -253,8 +235,6 @@ def test_mixed_batch_routes_correctly(
     assert len(on_disk) == EXPECTED_INVALID_COUNT
 
 
-# retry_count starts at zero on first failure
-
 def test_initial_retry_count_is_zero(
     domain_service,
     dead_letter_service,
@@ -278,8 +258,6 @@ def test_initial_retry_count_is_zero(
     for record in on_disk:
         assert record["retry_count"] == 0
 
-
-# Each error type present in disk records
 
 def test_error_types_present_in_rejected_records(
     domain_service,

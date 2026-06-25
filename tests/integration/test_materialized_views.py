@@ -50,8 +50,6 @@ FIXTURE_CREDIT_CARD_COUNT = 3
 FIXTURE_CASH_COUNT = 2
 
 
-# Helpers
-
 def _read_parquet_rows(path: Path) -> list[dict]:
     from etl.infrastructure.storage.parquet_reader import ParquetReader
     rows = []
@@ -89,7 +87,6 @@ def _insert_fixture(domain_service, trip_repository, batch_id: str) -> None:
 
 
 # trips_hourly_mv
-
 def test_hourly_mv_count_matches_raw(
     domain_service, trip_repository, ch_client, cleanup_batch
 ):
@@ -166,7 +163,6 @@ def test_hourly_mv_vendor_split(
 
 
 # trips_daily_mv
-
 def test_daily_mv_count_matches_raw(
     domain_service, trip_repository, ch_client, cleanup_batch
 ):
@@ -242,7 +238,6 @@ def test_daily_mv_payment_type_split(
 
 
 # trips_by_borough_mv
-
 def test_borough_mv_count_matches_raw(
     domain_service, trip_repository, ch_client, cleanup_batch
 ):
@@ -306,7 +301,6 @@ def test_borough_mv_all_dropoffs_in_manhattan(
 
 
 # trips_by_payment_mv
-
 def test_payment_mv_count_matches_raw(
     domain_service, trip_repository, ch_client, cleanup_batch
 ):
@@ -353,7 +347,6 @@ def test_payment_mv_credit_card_avg_tip(
 
 
 # trips_by_zone_mv
-
 def test_zone_mv_count_matches_raw(
     domain_service, trip_repository, ch_client, cleanup_batch
 ):

@@ -16,7 +16,6 @@ def serializer() -> KafkaSerializer:
 
 
 # serialize
-
 def test_serialize_returns_bytes(serializer):
     result = serializer.serialize({"key": "value"})
     assert isinstance(result, bytes)
@@ -69,7 +68,6 @@ def test_serialize_none_value(serializer):
 
 
 # deserialize
-
 def test_deserialize_returns_dict(serializer):
     data = b'{"trip_id": "abc", "fare": 12.5}'
     result = serializer.deserialize(data)
@@ -96,7 +94,6 @@ def test_deserialize_non_utf8_returns_none(serializer):
 
 
 # round-trip
-
 def test_round_trip_plain_dict(serializer):
     original = {"trip_id": "abc123", "vendor_id": "CMT", "total_amount": 19.8}
     serialized = serializer.serialize(original)
@@ -119,7 +116,6 @@ def test_round_trip_float_amounts(serializer):
 
 
 # serialize_batch
-
 def test_serialize_batch_returns_list_of_bytes(serializer):
     messages = [{"id": 1}, {"id": 2}, {"id": 3}]
     result = serializer.serialize_batch(messages)

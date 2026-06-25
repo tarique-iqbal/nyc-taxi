@@ -9,8 +9,8 @@ from etl.infrastructure.monitoring.health import (
     HealthStatus,
 )
 
-# ComponentHealth
 
+# ComponentHealth
 def test_component_health_defaults():
     c = ComponentHealth(name="kafka", status=HealthStatus.OK)
     assert c.detail == ""
@@ -22,7 +22,6 @@ def test_component_health_with_detail():
 
 
 # HealthReport.overall
-
 def test_overall_ok_when_all_ok():
     report = HealthReport(components=[
         ComponentHealth("kafka", HealthStatus.OK),
@@ -69,7 +68,6 @@ def test_overall_all_down():
 
 
 # HealthReport.as_dict
-
 def test_as_dict_shape():
     report = HealthReport(components=[
         ComponentHealth("kafka", HealthStatus.OK),
@@ -103,7 +101,6 @@ def test_as_dict_overall_status_matches_overall_property():
 
 
 # HealthStatus is str enum
-
 def test_health_status_values():
     assert HealthStatus.OK == "ok"
     assert HealthStatus.DEGRADED == "degraded"
@@ -119,7 +116,6 @@ def test_health_status_serialises_as_string():
 
 
 # HealthChecker._check_clickhouse
-
 def test_check_clickhouse_ok_when_ping_succeeds():
     client = MagicMock()
     client.ping.return_value = True
@@ -146,7 +142,6 @@ def test_check_clickhouse_degraded_when_client_is_none():
 
 
 # HealthChecker._check_kafka
-
 def test_check_kafka_degraded_when_no_servers():
     checker = HealthChecker(kafka_bootstrap_servers=None)
     component = checker._check_kafka()
@@ -186,7 +181,6 @@ def test_check_kafka_down_when_admin_client_raises(MockAdminClient):
 
 
 # HealthChecker.check
-
 @patch("confluent_kafka.admin.AdminClient")
 def test_check_returns_report_with_two_components(MockAdminClient):
     mock_admin = MagicMock()

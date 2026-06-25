@@ -11,7 +11,6 @@ from etl.application.ingestion.process_batch import (
 from etl.domain.trip.events import InvalidTripDetected, ProcessingStage
 from etl.domain.trip.models import Distance, Duration, Money, Payment, Trip
 
-# Helpers
 
 def _make_trip(trip_id: str = "abc123") -> Trip:
     pickup = datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC)
@@ -79,7 +78,6 @@ def _make_use_case(
 
 
 # ProcessBatchCommand
-
 def test_command_auto_generates_batch_id():
     cmd = ProcessBatchCommand(raw_rows=[{"x": 1}], source_file="test.parquet")
     assert cmd.batch_id is not None
@@ -102,7 +100,6 @@ def test_two_commands_get_different_batch_ids():
 
 
 # ProcessBatchResult
-
 def test_result_total_is_valid_plus_invalid():
     result = ProcessBatchResult(
         batch_id="x", valid_count=8, invalid_count=2, duration_seconds=0.1
@@ -139,7 +136,6 @@ def test_result_reject_rate_one_when_all_invalid():
 
 
 # ProcessBatchUseCase.handle: all valid
-
 def test_handle_returns_valid_count():
     trips = [_make_trip(f"id-{i}") for i in range(5)]
     use_case, _, _, _ = _make_use_case(valid_trips=trips)
@@ -184,7 +180,6 @@ def test_handle_does_not_dead_letter_when_no_invalid():
 
 
 # ProcessBatchUseCase.handle: all invalid
-
 def test_handle_returns_invalid_count():
     events = [_make_invalid_event(f"bad-{i}") for i in range(3)]
     use_case, _, _, _ = _make_use_case(invalid_events=events)
@@ -219,7 +214,6 @@ def test_handle_does_not_publish_when_all_invalid():
 
 
 # ProcessBatchUseCase.handle: mixed
-
 def test_handle_mixed_valid_and_invalid():
     trips = [_make_trip("good")]
     events = [_make_invalid_event("bad")]
@@ -237,7 +231,6 @@ def test_handle_mixed_valid_and_invalid():
 
 
 # ProcessBatchUseCase.handle: empty batch
-
 def test_handle_empty_batch_returns_zero_counts():
     use_case, _, publisher, dl_service = _make_use_case()
     cmd = ProcessBatchCommand(raw_rows=[], source_file="test.parquet")
@@ -251,7 +244,6 @@ def test_handle_empty_batch_returns_zero_counts():
 
 
 # ProcessBatchUseCase.handle: domain service receives correct args
-
 def test_handle_passes_batch_id_and_source_file_to_domain_service():
     use_case, domain_service, _, _ = _make_use_case()
     cmd = ProcessBatchCommand(
@@ -269,7 +261,6 @@ def test_handle_passes_batch_id_and_source_file_to_domain_service():
 
 
 # ProcessBatchUseCase.handle: duration
-
 def test_handle_result_has_positive_duration():
     use_case, _, _, _ = _make_use_case()
     cmd = ProcessBatchCommand(raw_rows=[], source_file="test.parquet")

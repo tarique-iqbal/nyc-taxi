@@ -10,7 +10,6 @@ def _row(n: int = 1) -> dict:
 
 
 # should_flush: size threshold
-
 def test_should_flush_false_when_below_threshold():
     acc = BatchAccumulator(max_size=5, max_wait_seconds=60)
     acc.add(_row())
@@ -33,7 +32,6 @@ def test_should_flush_true_above_threshold():
 
 
 # should_flush: time timeout
-
 def test_should_flush_true_after_timeout():
     acc = BatchAccumulator(max_size=1000, max_wait_seconds=0)
     acc.add(_row())
@@ -49,7 +47,6 @@ def test_should_flush_false_before_timeout():
 
 
 # flush
-
 def test_flush_returns_accumulated_rows():
     acc = BatchAccumulator(max_size=10, max_wait_seconds=60)
     acc.add(_row(1))
@@ -91,7 +88,6 @@ def test_flush_on_empty_is_safe():
 
 
 # add_many
-
 def test_add_many_increases_pending_count():
     acc = BatchAccumulator(max_size=100, max_wait_seconds=60)
     acc.add_many([_row(i) for i in range(5)])
@@ -99,7 +95,6 @@ def test_add_many_increases_pending_count():
 
 
 # AccumulatedBatch
-
 def test_accumulated_batch_is_empty_true_for_empty():
     batch = AccumulatedBatch(rows=[], batch_id="x", source="kafka")
     assert batch.is_empty() is True
@@ -117,7 +112,6 @@ def test_accumulated_batch_size():
 
 
 # seconds_since_last_flush
-
 def test_seconds_since_last_flush_increases_over_time():
     acc = BatchAccumulator(max_size=10, max_wait_seconds=60)
     time.sleep(0.05)

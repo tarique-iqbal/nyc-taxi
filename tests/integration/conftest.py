@@ -13,8 +13,6 @@ INVALID_PARQUET = FIXTURES_DIR / "invalid_trips.parquet"
 ZONE_CSV = FIXTURES_DIR / "taxi_zone_lookup.csv"
 
 
-# Infrastructure availability helpers
-
 def _clickhouse_available() -> bool:
     try:
         from etl.infrastructure.clickhouse.client import ClickHouseClient
@@ -54,8 +52,6 @@ requires_kafka = pytest.mark.skipif(
     reason="Kafka not reachable -- run: make up",
 )
 
-
-# Shared fixtures
 
 @pytest.fixture(scope="session")
 def settings():
