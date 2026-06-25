@@ -325,3 +325,109 @@ def test_etl_metadata_persisted(
     assert len(result) == 1
     assert result[0][0] == batch_id
     assert result[0][1] == source_file
+
+
+def test_kafka_json_roundtrip_preserves_timestamp_fields(
+    domain_service,
+    trip_repository,
+    ch_client,
+    cleanup_batch,
+):
+    """
+    Regression test for Kafka JSON serialization.
+
+    Datetime fields are serialized to ISO8601 strings when sent
+    through Kafka. The consumer/repository layer must convert them
+    back into Python datetimes before constructing Arrow tables.
+    """
+    from etl.infrastructure.kafka.serializer import KafkaSerializer
+
+    serializer = KafkaSerializer()
+
+    batch_id = cleanup_batch
+
+    raw_rows = _read_parquet_rows(SAMPLE_PARQUET)
+
+    valid_trips, invalid_events = domain_service.process_batch(
+        raw_rows=raw_rows,
+        batch_id=batch_id,
+        source_file="sample_trips.parquet",
+    )
+
+    assert len(valid_trips) == EXPECTED_VALID_COUNT
+    assert len(invalid_events) == 0
+
+    kafka_messages: list[dict] = []
+
+    for trip in valid_trips:
+        original = trip.to_dict()
+
+        payload = serializer.serialize(original)
+
+        restored = serializer.deserialize(payload)
+
+        assert restored is not None
+
+        # Verify Kafka converted datetimes into strings.
+        # This is the exact situation the consumer receives.
+        assert isinstance(
+            restored["pickup_datetime"],
+            str,
+        )
+
+        assert isinstance(
+            restored["dropoff_datetime"],
+            str,
+        )
+
+        kafka_messages.append(restored)
+
+    # save_batch_from_dicts must accept Kafka-restored payloads.
+    trip_repository.save_batch_from_dicts(kafka_messages)
+
+    persisted = _wait_for_rows(
+        ch_client,
+        batch_id,
+        EXPECTED_VALID_COUNT,
+    )
+
+    assert len(persisted) == EXPECTED_VALID_COUNT
+
+
+def test_repository_accepts_iso8601_timestamp_strings(
+    domain_service,
+    trip_repository,
+    ch_client,
+    cleanup_batch,
+):
+    """
+    Repository must accept Kafka-style ISO8601 datetime strings.
+    """
+    batch_id = cleanup_batch
+
+    raw_rows = _read_parquet_rows(SAMPLE_PARQUET)
+
+    valid_trips, _ = domain_service.process_batch(
+        raw_rows=raw_rows,
+        batch_id=batch_id,
+        source_file="sample_trips.parquet",
+    )
+
+    row = valid_trips[0].to_dict()
+
+    # Simulate Kafka JSON deserialization.
+    row["pickup_datetime"] = row["pickup_datetime"].isoformat()
+    row["dropoff_datetime"] = row["dropoff_datetime"].isoformat()
+
+    assert isinstance(row["pickup_datetime"], str)
+    assert isinstance(row["dropoff_datetime"], str)
+
+    trip_repository.save_batch_from_dicts([row])
+
+    persisted = _wait_for_rows(
+        ch_client,
+        batch_id,
+        expected=1,
+    )
+
+    assert len(persisted) == 1
