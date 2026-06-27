@@ -23,7 +23,6 @@ die()     { echo -e "${RED}[ERROR]${NC} $*" >&2; exit 1; }
 
 [[ -f ".env" ]] && { set -a; source .env; set +a; }
 
-KAFKA_CONTAINER="${KAFKA_CONTAINER:-nyc_taxi_kafka}"
 INTERNAL_BOOTSTRAP="kafka:29092"
 TIMEOUT=60
 
