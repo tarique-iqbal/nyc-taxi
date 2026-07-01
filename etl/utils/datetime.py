@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
 
 def _from_epoch(value: float) -> datetime:
@@ -56,7 +56,7 @@ def parse_timestamp(value: Any) -> datetime | None:
         if pd.isna(ts):
             return None
 
-        dt = ts.to_pydatetime()
+        dt = cast(datetime, ts.to_pydatetime())
         return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
 
     except Exception:
