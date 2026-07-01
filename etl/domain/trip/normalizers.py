@@ -71,23 +71,34 @@ class TripNormalizer:
         return normalised
 
     @staticmethod
+    def _to_int(value: object) -> int | None:
+        """Safely convert a supported value to int."""
+        if isinstance(value, (int, float, str)):
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return None
+        return None
+
+    @staticmethod
     def _normalise_vendor(value: object) -> str:
-        try:
-            return VENDOR_MAP.get(int(value), UNKNOWN_LABEL)  # type: ignore[arg-type]
-        except (TypeError, ValueError):
+        code = TripNormalizer._to_int(value)
+        if code is None:
             return UNKNOWN_LABEL
+        return VENDOR_MAP.get(code, UNKNOWN_LABEL)
 
     @staticmethod
     def _normalise_payment_type(value: object) -> str:
-        try:
-            return PAYMENT_TYPE_MAP.get(int(value), UNKNOWN_LABEL)  # type: ignore[arg-type]
-        except (TypeError, ValueError):
+        code = TripNormalizer._to_int(value)
+        if code is None:
             return UNKNOWN_LABEL
+        return PAYMENT_TYPE_MAP.get(code, UNKNOWN_LABEL)
 
     @staticmethod
     def _normalise_rate_code(value: object) -> str:
         try:
-            return RATE_CODE_MAP.get(int(float(str(value))), UNKNOWN_LABEL)
+            code = int(float(str(value)))
+            return RATE_CODE_MAP.get(code, UNKNOWN_LABEL)
         except (TypeError, ValueError):
             return UNKNOWN_LABEL
 
@@ -95,15 +106,23 @@ class TripNormalizer:
     def _normalise_passenger_count(value: object) -> int:
         if value is None:
             return DEFAULT_PASSENGER_COUNT
-        try:
-            count = int(value)
-            return count if count > 0 else DEFAULT_PASSENGER_COUNT
-        except (TypeError, ValueError):
+
+        count = TripNormalizer._to_int(value)
+        if count is None:
             return DEFAULT_PASSENGER_COUNT
+
+        return count if count > 0 else DEFAULT_PASSENGER_COUNT
 
     @staticmethod
     def _normalise_store_and_fwd(value: object) -> str:
         if value is None:
             return UNKNOWN_LABEL
-        mapping = {"Y": "Yes", "N": "No", "y": "Yes", "n": "No"}
+
+        mapping = {
+            "Y": "Yes",
+            "N": "No",
+            "y": "Yes",
+            "n": "No",
+        }
+
         return mapping.get(str(value), UNKNOWN_LABEL)
