@@ -29,6 +29,31 @@ def _parse_datetime(value: object, field_name: str) -> datetime:
     return dt
 
 
+def _to_int(value: object) -> int:
+    """Safely convert a supported value to int."""
+    if isinstance(value, (int, float, str)):
+        try:
+            return int(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"cannot convert {value!r} to int") from exc
+
+    raise ValueError(f"cannot convert {value!r} to int")
+
+
+def _to_float(value: object) -> float | None:
+    """Safely convert a supported value to float."""
+    if value is None:
+        return None
+
+    if isinstance(value, (int, float, str)):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    return None
+
+
 def _build_trip(
     normalised: dict[str, object],
     batch_id: str,
@@ -43,10 +68,14 @@ def _build_trip(
     dropoff_dt = _parse_datetime(normalised.get("dropoff_datetime"), "dropoff_datetime")
 
     try:
-        pickup_location_id = int(normalised["pickup_location_id"])  # type: ignore[arg-type]
-        dropoff_location_id = int(normalised["dropoff_location_id"])  # type: ignore[arg-type]
-    except (KeyError, TypeError, ValueError) as exc:
-        raise TripParseError("location_id", normalised.get("pickup_location_id"), str(exc)) from exc
+        pickup_location_id = _to_int(normalised["pickup_location_id"])
+        dropoff_location_id = _to_int(normalised["dropoff_location_id"])
+    except (KeyError, ValueError) as exc:
+        raise TripParseError(
+            "location_id",
+            normalised.get("pickup_location_id"),
+            str(exc),
+        ) from exc
 
     trip_id = generate_trip_id(
         vendor_id=str(normalised.get("vendor_id", "")),
@@ -60,8 +89,8 @@ def _build_trip(
         vendor_id=str(normalised.get("vendor_id", "Unknown")),
         pickup_datetime=pickup_dt,
         dropoff_datetime=dropoff_dt,
-        passenger_count=int(normalised.get("passenger_count", 1)),  # type: ignore[arg-type]
-        distance=Distance.of(normalised.get("trip_distance")),
+        passenger_count=_to_int(normalised.get("passenger_count", 1)),
+        distance=Distance.of(_to_float(normalised.get("trip_distance"))),
         duration=Duration.between(pickup_dt, dropoff_dt),
         pickup_location_id=pickup_location_id,
         dropoff_location_id=dropoff_location_id,
@@ -78,10 +107,10 @@ class TripDomainService:
     Orchestrates the full domain pipeline for a batch of raw rows.
 
     Pipeline per row:
-      1. Normalise  -- maps int codes to strings, fills nulls
-      2. Parse      -- constructs Trip entity
-      3. Enrich     -- resolves location IDs to zone names
-      4. Validate   -- applies business rules
+      1. Normalise   -- maps int codes to strings, fills nulls
+      2. Parse       -- constructs Trip entity
+      3. Enrich      -- resolves location IDs to zone names
+      4. Validate    -- applies business rules
       5. Deduplicate -- removes within-batch duplicates
 
     Any DomainError at steps 1-4 wraps the row in InvalidTripDetected
@@ -122,6 +151,7 @@ class TripDomainService:
 
         for raw in raw_rows:
             trip: Trip | None = None
+
             try:
                 normalised = TripNormalizer.normalize(raw)
                 trip = _build_trip(normalised, batch_id, source_file)
@@ -131,15 +161,18 @@ class TripDomainService:
 
             except DomainError as exc:
                 stage = _stage_from_exception(exc)
-                event = InvalidTripDetected.from_exception(
-                    exc=exc,
-                    stage=stage,
-                    original_record=raw,
-                    batch_id=batch_id,
-                    source_file=source_file,
-                    trip_id=trip.trip_id if trip else None,
+
+                invalid_events.append(
+                    InvalidTripDetected.from_exception(
+                        exc=exc,
+                        stage=stage,
+                        original_record=raw,
+                        batch_id=batch_id,
+                        source_file=source_file,
+                        trip_id=trip.trip_id if trip else None,
+                    )
                 )
-                invalid_events.append(event)
+
                 logger.debug(
                     "Trip rejected at %s stage: %s",
                     stage.value,
@@ -148,16 +181,16 @@ class TripDomainService:
                 )
 
             except Exception as exc:
-                # Unexpected errors (e.g. pandas missing) are wrapped so
-                # one bad row never aborts the whole batch.
-                event = InvalidTripDetected.from_exception(
-                    exc=exc,
-                    stage=ProcessingStage.PARSING,
-                    original_record=raw,
-                    batch_id=batch_id,
-                    source_file=source_file,
+                invalid_events.append(
+                    InvalidTripDetected.from_exception(
+                        exc=exc,
+                        stage=ProcessingStage.PARSING,
+                        original_record=raw,
+                        batch_id=batch_id,
+                        source_file=source_file,
+                    )
                 )
-                invalid_events.append(event)
+
                 logger.warning(
                     "Unexpected error processing row: %s",
                     str(exc),
@@ -196,7 +229,7 @@ class TripDomainService:
 
 def _stage_from_exception(exc: DomainError) -> ProcessingStage:
     """Map a DomainError subclass to the pipeline stage where it originated."""
-    from etl.domain.trip.exceptions import (  # noqa: PLC0415
+    from etl.domain.trip.exceptions import (
         InvalidPassengerCountError,
         InvalidPickupDatetimeError,
         InvalidTripDurationError,
@@ -207,8 +240,10 @@ def _stage_from_exception(exc: DomainError) -> ProcessingStage:
 
     if isinstance(exc, TripParseError):
         return ProcessingStage.PARSING
+
     if isinstance(exc, ZoneNotFoundError):
         return ProcessingStage.ENRICHMENT
+
     if isinstance(
         exc,
         (
@@ -219,4 +254,5 @@ def _stage_from_exception(exc: DomainError) -> ProcessingStage:
         ),
     ):
         return ProcessingStage.VALIDATION
+
     return ProcessingStage.PARSING
