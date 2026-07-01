@@ -4,11 +4,17 @@ import functools
 import logging
 import time
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any, TypedDict, TypeVar
 
 logger = logging.getLogger(__name__)
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+
+class RetryKwargs(TypedDict):
+    max_attempts: int
+    delay: float
+    backoff: float
 
 
 def retry(
@@ -41,6 +47,7 @@ def retry(
         def insert(self, rows):
             ...
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -51,7 +58,6 @@ def retry(
                     return func(*args, **kwargs)
 
                 except exceptions as exc:
-
                     if attempt == max_attempts:
                         logger.error(
                             "All %d attempts failed for %s: %s",
@@ -84,6 +90,7 @@ def retry(
                             "error_type": type(exc).__name__,
                         },
                     )
+
                     time.sleep(current_delay)
                     current_delay *= backoff
 
@@ -102,7 +109,26 @@ class RetryConfig:
     so retry policies are consistent and easy to tune from one place.
     """
 
-    KAFKA_PUBLISH = dict(max_attempts=5, delay=0.5, backoff=2.0)
-    CLICKHOUSE_INSERT = dict(max_attempts=3, delay=1.0, backoff=2.0)
-    ZONE_CSV_LOAD = dict(max_attempts=3, delay=0.5, backoff=1.5)
-    HEALTH_CHECK = dict(max_attempts=5, delay=2.0, backoff=1.0)
+    KAFKA_PUBLISH: RetryKwargs = {
+        "max_attempts": 5,
+        "delay": 0.5,
+        "backoff": 2.0,
+    }
+
+    CLICKHOUSE_INSERT: RetryKwargs = {
+        "max_attempts": 3,
+        "delay": 1.0,
+        "backoff": 2.0,
+    }
+
+    ZONE_CSV_LOAD: RetryKwargs = {
+        "max_attempts": 3,
+        "delay": 0.5,
+        "backoff": 1.5,
+    }
+
+    HEALTH_CHECK: RetryKwargs = {
+        "max_attempts": 5,
+        "delay": 2.0,
+        "backoff": 1.0,
+    }
