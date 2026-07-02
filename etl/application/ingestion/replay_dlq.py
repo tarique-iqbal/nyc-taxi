@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
+from typing import cast
 
 from etl.application import EventPublisher
 from etl.domain.dead_letter.models import DeadLetterRecord, DeadLetterStage
@@ -199,20 +200,31 @@ class ReplayDlqUseCase:
 
         for file_path in files:
             logger.debug("Replaying from file", extra={"path": str(file_path)})
+
             try:
                 for raw in iter_jsonl_gz(file_path):
-                    yield DeadLetterRecord(
-                        original_record=raw.get("original_record", {}),
-                        error_message=raw.get("error_message", ""),
-                        error_type=raw.get("error_type", "Unknown"),
-                        stage=DeadLetterStage(
-                            raw.get("stage", DeadLetterStage.PARSING.value)
-                        ),
-                        batch_id=raw.get("batch_id", ""),
-                        source_file=raw.get("source_file", ""),
-                        trip_id=raw.get("trip_id"),
-                        retry_count=int(raw.get("retry_count", 0)),
+                    original_record = cast(dict[str, object], raw.get("original_record", {}))
+                    error_message = cast(str, raw.get("error_message", ""))
+                    error_type = cast(str, raw.get("error_type", "Unknown"))
+                    stage = DeadLetterStage(
+                        cast(str, raw.get("stage", DeadLetterStage.PARSING.value))
                     )
+                    batch_id = cast(str, raw.get("batch_id", ""))
+                    source_file = cast(str, raw.get("source_file", ""))
+                    trip_id = cast(str | None, raw.get("trip_id"))
+                    retry_count = int(cast(int | str, raw.get("retry_count", 0)))
+
+                    yield DeadLetterRecord(
+                        original_record=original_record,
+                        error_message=error_message,
+                        error_type=error_type,
+                        stage=stage,
+                        batch_id=batch_id,
+                        source_file=source_file,
+                        trip_id=trip_id,
+                        retry_count=retry_count,
+                    )
+
             except Exception as exc:
                 logger.error(
                     "Failed to read rejected file %s: %s", file_path, exc

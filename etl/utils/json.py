@@ -3,8 +3,13 @@ from __future__ import annotations
 import json
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, TypeAlias
 from uuid import UUID
+
+JSONValue: TypeAlias = (
+    str | int | float | bool | None | list["JSONValue"] | dict[str, "JSONValue"]
+)
+JSONDict: TypeAlias = dict[str, JSONValue]
 
 
 class ETLJSONEncoder(json.JSONEncoder):
@@ -47,15 +52,18 @@ def dumps(obj: Any, **kwargs: Any) -> str:
     return json.dumps(obj, cls=ETLJSONEncoder, **kwargs)
 
 
-def loads(s: str | bytes) -> Any:
+def loads(s: str | bytes) -> JSONDict:
     """
-    Deserialise a JSON string. Thin wrapper kept for import symmetry
+    Deserialise a JSON object. Thin wrapper kept for import symmetry
     and so a custom object_hook can be added here in future.
     """
-    return json.loads(s)
+    obj = json.loads(s)
+    if not isinstance(obj, dict):
+        raise TypeError(f"Expected top-level JSON object, got {type(obj).__name__}")
+    return obj
 
 
-def dumps_lines(records: list[dict[str, Any]]) -> str:
+def dumps_lines(records: list[JSONDict]) -> str:
     """
     Serialise a list of dicts to newline-delimited JSON (JSON Lines).
 

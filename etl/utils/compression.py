@@ -5,14 +5,14 @@ import logging
 from collections.abc import Iterator
 from pathlib import Path
 
-from etl.utils.json import dumps, loads
+from etl.utils.json import JSONDict, dumps, loads
 
 logger = logging.getLogger(__name__)
 
 JSONL_GZ_SUFFIX = ".jsonl.gz"
 
 
-def write_jsonl_gz(records: list[dict], path: Path) -> None:
+def write_jsonl_gz(records: list[JSONDict], path: Path) -> None:
     """
     Append records to a gzip-compressed JSON Lines file.
 
@@ -22,6 +22,7 @@ def write_jsonl_gz(records: list[dict], path: Path) -> None:
     Creates the parent directory if it does not exist.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
+
     with gzip.open(path, "at", encoding="utf-8") as f:
         for record in records:
             f.write(dumps(record) + "\n")
@@ -32,7 +33,7 @@ def write_jsonl_gz(records: list[dict], path: Path) -> None:
     )
 
 
-def read_jsonl_gz(path: Path) -> list[dict]:
+def read_jsonl_gz(path: Path) -> list[JSONDict]:
     """
     Read all records from a gzip-compressed JSON Lines file.
 
@@ -42,12 +43,14 @@ def read_jsonl_gz(path: Path) -> list[dict]:
     if not path.exists():
         raise FileNotFoundError(f"Compressed file not found: {path}")
 
-    records = []
+    records: list[JSONDict] = []
+
     with gzip.open(path, "rt", encoding="utf-8") as f:
         for line_num, line in enumerate(f, start=1):
             line = line.strip()
             if not line:
                 continue
+
             try:
                 records.append(loads(line))
             except Exception as exc:
@@ -58,7 +61,7 @@ def read_jsonl_gz(path: Path) -> list[dict]:
     return records
 
 
-def iter_jsonl_gz(path: Path) -> Iterator[dict]:
+def iter_jsonl_gz(path: Path) -> Iterator[JSONDict]:
     """
     Lazily iterate over records in a gzip-compressed JSON Lines file.
 
@@ -94,4 +97,5 @@ def list_rejected_files(rejected_dir: Path) -> list[Path]:
     """
     if not rejected_dir.exists():
         return []
+
     return sorted(rejected_dir.glob(f"*{JSONL_GZ_SUFFIX}"))
