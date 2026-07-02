@@ -3,8 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
+from typing import TypeAlias
 
 from etl.domain.trip.exceptions import NegativeMoneyError, TripParseError
+
+RawValue: TypeAlias = str | int | float | Decimal | None
 
 # Value objects
 #
@@ -129,7 +132,7 @@ class Payment:
     total_amount: Money
 
     @classmethod
-    def from_raw(cls, raw: dict[str, object]) -> Payment:
+    def from_raw(cls, raw: dict[str, RawValue]) -> Payment:
         def _money(key: str) -> Money:
             return Money.of(raw.get(key) or 0, field_name=key)
 

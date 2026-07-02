@@ -7,7 +7,7 @@ from etl.domain.trip.deduplicator import TripDeduplicator, generate_trip_id
 from etl.domain.trip.enrichers import TripEnricher
 from etl.domain.trip.events import InvalidTripDetected, ProcessingStage
 from etl.domain.trip.exceptions import DomainError, TripParseError
-from etl.domain.trip.models import Distance, Duration, Payment, Trip
+from etl.domain.trip.models import Distance, Duration, Payment, RawValue, Trip
 from etl.domain.trip.normalizers import TripNormalizer
 from etl.domain.trip.repositories import ZoneRepository
 from etl.domain.trip.validators import TripValidator
@@ -55,7 +55,7 @@ def _to_float(value: object) -> float | None:
 
 
 def _build_trip(
-    normalised: dict[str, object],
+    normalised: dict[str, RawValue],
     batch_id: str,
     source_file: str,
 ) -> Trip:

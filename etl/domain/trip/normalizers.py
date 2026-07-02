@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from typing import cast
+
+from etl.domain.trip.models import RawValue
+
 # Lookup tables
 #
 # Lookup values derived from the NYC Taxi & Limousine Commission
@@ -45,7 +49,7 @@ class TripNormalizer:
     """
 
     @staticmethod
-    def normalize(raw: dict[str, object]) -> dict[str, object]:
+    def normalize(raw: dict[str, object]) -> dict[str, RawValue]:
         """
         Return a new dict with all normalised values applied.
 
@@ -56,7 +60,7 @@ class TripNormalizer:
           4. passenger_count: null -> 1
           5. store_and_fwd_flag: Y/N -> "Yes"/"No", null -> "Unknown"
         """
-        normalised = dict(raw)
+        normalised = cast(dict[str, RawValue], dict(raw))
 
         normalised["vendor_id"] = TripNormalizer._normalise_vendor(raw.get("vendor_id"))
         normalised["payment_type"] = TripNormalizer._normalise_payment_type(raw.get("payment_type"))
