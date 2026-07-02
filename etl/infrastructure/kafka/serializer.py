@@ -47,7 +47,7 @@ class KafkaSerializer:
             return None
         try:
             return loads(data.decode("utf-8"))
-        except (UnicodeDecodeError, ValueError) as exc:
+        except (UnicodeDecodeError, ValueError, TypeError) as exc:
             logger.error(
                 "Failed to deserialise Kafka message: %s",
                 exc,
