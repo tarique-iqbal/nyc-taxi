@@ -50,7 +50,7 @@ class CorrelationFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         cid = get_correlation_id()
         if cid:
-            record.correlation_id = cid  # type: ignore[attr-defined]
+            record.correlation_id = cid
         return True
 
 

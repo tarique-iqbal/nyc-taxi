@@ -74,7 +74,7 @@ class EnrichmentService:
         may be no-ops.
         """
         if hasattr(self._zone_repo, "load"):
-            self._zone_repo.load()  # type: ignore[union-attr]
+            self._zone_repo.load()
             logger.info(
                 "Zone repository reloaded",
                 extra={"zone_count": getattr(self._zone_repo, "zone_count", "unknown")},
