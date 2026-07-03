@@ -4,11 +4,12 @@ import functools
 import logging
 import time
 from collections.abc import Callable
-from typing import Any, TypedDict, TypeVar
+from typing import ParamSpec, TypedDict, TypeVar
 
 logger = logging.getLogger(__name__)
 
-F = TypeVar("F", bound=Callable[..., Any])
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 class RetryKwargs(TypedDict):
@@ -23,7 +24,7 @@ def retry(
     backoff: float = 2.0,
     exceptions: tuple[type[Exception], ...] = (Exception,),
     reraise: bool = True,
-) -> Callable[[F], F]:
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
     Decorator that retries a function with exponential backoff.
 
@@ -48,9 +49,9 @@ def retry(
             ...
     """
 
-    def decorator(func: F) -> F:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             current_delay = delay
 
             for attempt in range(1, max_attempts + 1):
@@ -73,7 +74,7 @@ def retry(
                         )
                         if reraise:
                             raise
-                        return None
+                        return None  # type: ignore[return-value]
 
                     logger.warning(
                         "Attempt %d/%d failed for %s, retrying in %.1fs: %s",
@@ -94,11 +95,11 @@ def retry(
                     time.sleep(current_delay)
                     current_delay *= backoff
 
-            return None
+            return None  # type: ignore[return-value]
 
-        return wrapper  # type: ignore[return-value]
+        return wrapper
 
-    return decorator  # type: ignore[return-value]
+    return decorator
 
 
 class RetryConfig:
