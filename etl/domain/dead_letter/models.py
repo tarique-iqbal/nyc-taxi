@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 
+from etl.utils.json import JSONValue
+
 
 class DeadLetterStage(StrEnum):
     """
@@ -38,7 +40,7 @@ class DeadLetterRecord:
     generated (e.g. a parse error on the datetime fields).
     """
 
-    original_record: dict[str, object]
+    original_record: dict[str, JSONValue]
     error_message: str
     error_type: str
     stage: DeadLetterStage
@@ -70,7 +72,7 @@ class DeadLetterRecord:
             trip_id=getattr(event, "trip_id", None),
         )
 
-    def as_dict(self) -> dict[str, object]:
+    def as_dict(self) -> dict[str, JSONValue]:
         return {
             "trip_id": self.trip_id,
             "original_record": self.original_record,
