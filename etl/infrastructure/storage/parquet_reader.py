@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Generator, Iterator
 from pathlib import Path
+from typing import Any
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -128,7 +129,7 @@ class ParquetReader:
             FileNotFoundError: if the Parquet file does not exist.
             pa.lib.ArrowInvalid: if the file is corrupt or not valid Parquet.
         """
-        parquet_file = pq.ParquetFile(self._path)
+        parquet_file: Any = pq.ParquetFile(self._path)  # type: ignore[no-untyped-call]
         columns = self._available_columns(parquet_file.schema_arrow)
 
         logger.info(
