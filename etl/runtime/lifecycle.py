@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from etl.config.settings import Settings, get_settings
 from etl.observability.structured_logging import setup_logging
@@ -15,6 +15,11 @@ if TYPE_CHECKING:
     from etl.infrastructure.storage.zone_lookup import CsvZoneRepository
 
 logger = logging.getLogger(__name__)
+
+
+class Shutdownable(Protocol):
+    def shutdown(self) -> None:
+        ...
 
 
 @dataclass
@@ -32,8 +37,8 @@ class AppComponents:
     clickhouse_client: ClickHouseClient | None = field(default=None)
     kafka_producer: KafkaEventPublisher | None = field(default=None)
     kafka_consumer: KafkaConsumerAdapter | None = field(default=None)
-    metrics_server: object | None = field(default=None)
-    health_server: object | None = field(default=None)
+    metrics_server: Shutdownable | None = field(default=None)
+    health_server: Shutdownable | None = field(default=None)
 
 
 def startup(mode: str = "producer") -> AppComponents:
@@ -74,6 +79,7 @@ def startup(mode: str = "producer") -> AppComponents:
     if mode in ("consumer", "both"):
         logger.info("Connecting to ClickHouse")
         from etl.infrastructure.clickhouse.client import ClickHouseClient
+
         components.clickhouse_client = ClickHouseClient(
             host=settings.clickhouse.host,
             port=settings.clickhouse.port,
@@ -87,6 +93,7 @@ def startup(mode: str = "producer") -> AppComponents:
     # Step 4: Zone repository
     logger.info("Loading zone lookup", extra={"path": str(settings.etl.zone_lookup_path)})
     from etl.infrastructure.storage.zone_lookup import CsvZoneRepository
+
     repo = CsvZoneRepository(path=settings.etl.zone_lookup_path)
     repo.load()
     components.zone_repository = repo
@@ -96,6 +103,7 @@ def startup(mode: str = "producer") -> AppComponents:
     if mode in ("producer", "both"):
         logger.info("Creating Kafka producer")
         from etl.infrastructure.kafka.producer import KafkaEventPublisher
+
         components.kafka_producer = KafkaEventPublisher(
             bootstrap_servers=settings.kafka.bootstrap_servers,
             acks=settings.kafka.producer_acks,
@@ -105,6 +113,7 @@ def startup(mode: str = "producer") -> AppComponents:
     if mode in ("consumer", "both"):
         logger.info("Creating Kafka consumer")
         from etl.infrastructure.kafka.consumer import KafkaConsumerAdapter
+
         components.kafka_consumer = KafkaConsumerAdapter(
             bootstrap_servers=settings.kafka.bootstrap_servers,
             group_id=settings.kafka.consumer_group_id,
