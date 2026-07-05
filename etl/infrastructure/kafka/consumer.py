@@ -95,8 +95,9 @@ class KafkaConsumerAdapter:
                 msg: Message | None = self._consumer.poll(timeout=1.0)
 
                 if msg is not None:
-                    if msg.error():
-                        self._handle_error(msg.error())
+                    error = msg.error()
+                    if error is not None:
+                        self._handle_error(error)
                     else:
                         row = self._serializer.deserialize(msg.value())
                         if row is not None:
