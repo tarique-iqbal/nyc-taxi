@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass
 
 from confluent_kafka import KafkaException
-from confluent_kafka.admin import AdminClient, NewTopic
+from confluent_kafka.admin import AdminClient, NewTopic  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +113,7 @@ class TopicManager:
 
     def list_topics(self) -> list[str]:
         """Return names of all topics on the broker."""
-        return self._list_existing_topics()
+        return sorted(self._list_existing_topics())
 
     def topic_exists(self, name: str) -> bool:
         return name in self._list_existing_topics()
@@ -123,5 +123,5 @@ class TopicManager:
         return set(metadata.topics.keys())
 
     def close(self) -> None:
-        """Release the AdminClient connection."""
-        self._admin.__del__()
+        """No explicit cleanup is required for AdminClient."""
+        return
