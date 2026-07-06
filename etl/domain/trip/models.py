@@ -6,6 +6,7 @@ from decimal import Decimal, InvalidOperation
 from typing import TypeAlias
 
 from etl.domain.trip.exceptions import NegativeMoneyError, TripParseError
+from etl.utils.json import JSONDict
 
 RawValue: TypeAlias = str | int | float | Decimal | None
 
@@ -230,20 +231,19 @@ class Trip:
         self.dropoff_zone = dropoff.zone
         self.dropoff_borough = dropoff.borough
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> JSONDict:
         """
         Serialise to a flat dict for Kafka publishing and ClickHouse insertion.
 
         Decimal amounts are converted to float for JSON compatibility.
-        Datetimes are kept as datetime objects -- the serialiser layer
-        handles ISO format conversion.
+        Datetimes are converted to ISO strings for JSON compatibility.
         """
         p = self.payment
         return {
             "trip_id": self.trip_id,
             "vendor_id": self.vendor_id,
-            "pickup_datetime": self.pickup_datetime,
-            "dropoff_datetime": self.dropoff_datetime,
+            "pickup_datetime": self.pickup_datetime.isoformat(),
+            "dropoff_datetime": self.dropoff_datetime.isoformat(),
             "trip_duration_seconds": self.duration.seconds,
             "passenger_count": self.passenger_count,
             "trip_distance": self.distance.miles,
@@ -265,7 +265,7 @@ class Trip:
             "payment_type": p.payment_type,
             "rate_code": self.rate_code,
             "store_and_fwd_flag": self.store_and_fwd_flag,
-            "ingested_at": self.ingested_at,
+            "ingested_at": self.ingested_at.isoformat(),
             "batch_id": self.batch_id,
             "source_file": self.source_file,
         }

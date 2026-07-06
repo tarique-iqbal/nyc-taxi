@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 
+from etl.utils.json import JSONDict
+
 
 class ProcessingStage(StrEnum):
     """The pipeline stage at which a trip event was raised."""
@@ -80,7 +82,7 @@ class InvalidTripDetected:
     stage: ProcessingStage
     error_message: str
     error_type: str
-    original_record: dict[str, object]
+    original_record: JSONDict
     batch_id: str
     source_file: str
     trip_id: str | None = None
@@ -91,7 +93,7 @@ class InvalidTripDetected:
         cls,
         exc: Exception,
         stage: ProcessingStage,
-        original_record: dict[str, object],
+        original_record: JSONDict,
         batch_id: str,
         source_file: str,
         trip_id: str | None = None,

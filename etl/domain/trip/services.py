@@ -12,6 +12,7 @@ from etl.domain.trip.normalizers import TripNormalizer
 from etl.domain.trip.repositories import ZoneRepository
 from etl.domain.trip.validators import TripValidator
 from etl.utils.datetime import parse_timestamp
+from etl.utils.json import JSONDict
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +132,7 @@ class TripDomainService:
 
     def process_batch(
         self,
-        raw_rows: list[dict[str, object]],
+        raw_rows: list[JSONDict],
         batch_id: str,
         source_file: str,
     ) -> tuple[list[Trip], list[InvalidTripDetected]]:

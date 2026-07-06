@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import cast
 
 from etl.domain.trip.models import RawValue
+from etl.utils.json import JSONDict
 
 # Lookup tables
 #
@@ -49,7 +50,7 @@ class TripNormalizer:
     """
 
     @staticmethod
-    def normalize(raw: dict[str, object]) -> dict[str, RawValue]:
+    def normalize(raw: JSONDict) -> dict[str, RawValue]:
         """
         Return a new dict with all normalised values applied.
 
