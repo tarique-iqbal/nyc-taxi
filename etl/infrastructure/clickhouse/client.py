@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
 
 from clickhouse_driver import Client
 from clickhouse_driver.errors import Error as ClickHouseError
@@ -78,7 +78,8 @@ class ClickHouseClient:
 
         Used for DDL, SELECT queries, and columnar inserts (columnar=True).
         """
-        return self._client.execute(query, params or {}, **kwargs)
+        result = self._client.execute(query, params or {}, **kwargs)
+        return cast(list[Any], result)
 
     @retry(**RetryConfig.CLICKHOUSE_INSERT, exceptions=(ClickHouseError, OSError))
     def execute_many(self, query: str, rows: Sequence[Any]) -> None:
