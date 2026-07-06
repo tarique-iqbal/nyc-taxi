@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field
+from typing import Any
 
 from etl.application import EventPublisher
 from etl.domain.dead_letter.models import DeadLetterRecord
@@ -19,7 +20,7 @@ class ProcessBatchCommand:
     and every ClickHouse row produced from this batch.
     """
 
-    raw_rows: list[dict]
+    raw_rows: list[dict[str, Any]]
     source_file: str
     batch_id: str = field(default_factory=lambda: str(uuid.uuid4()))
 

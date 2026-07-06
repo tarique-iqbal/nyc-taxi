@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from typing import Any
 
 from etl.domain.trip.events import InvalidTripDetected
 from etl.domain.trip.models import Trip
@@ -12,7 +13,7 @@ from etl.domain.trip.services import TripDomainService
 class ProcessTripCommand:
     """Command carrying a single raw row for use-case processing."""
 
-    raw_row: dict
+    raw_row: dict[str, Any]
     source_file: str
     batch_id: str = ""
 
