@@ -397,10 +397,7 @@ def test_repository_accepts_iso8601_timestamp_strings(
 
     row = valid_trips[0].to_dict()
 
-    # Simulate Kafka JSON deserialization.
-    row["pickup_datetime"] = row["pickup_datetime"].isoformat()
-    row["dropoff_datetime"] = row["dropoff_datetime"].isoformat()
-
+    # Kafka JSON serialization already produces ISO strings
     assert isinstance(row["pickup_datetime"], str)
     assert isinstance(row["dropoff_datetime"], str)
 
