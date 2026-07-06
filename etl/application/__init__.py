@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from collections.abc import Sequence
+
+from etl.utils.json import JSONDict
 
 
 class EventPublisher(ABC):
@@ -15,7 +17,7 @@ class EventPublisher(ABC):
     """
 
     @abstractmethod
-    def publish_batch(self, topic: str, messages: list[dict[str, Any]]) -> None:
+    def publish_batch(self, topic: str, messages: Sequence[JSONDict]) -> None:
         """Publish a list of message dicts to the given topic."""
 
     @abstractmethod

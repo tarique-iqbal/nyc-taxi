@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from etl.application import EventPublisher
 from etl.application.services.validation_service import ValidationService
@@ -123,7 +123,7 @@ class IngestionService:
 
     def _process_batch(
         self,
-        raw_batch: list[dict],
+        raw_batch: list[dict[str, Any]],
         batch_id: str,
         summary: IngestionSummary,
     ) -> None:

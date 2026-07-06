@@ -13,6 +13,7 @@ from etl.domain.dead_letter.models import DeadLetterRecord, DeadLetterStage
 from etl.domain.dead_letter.services import DeadLetterService
 from etl.domain.trip.services import TripDomainService
 from etl.utils.compression import iter_jsonl_gz, list_rejected_files
+from etl.utils.json import JSONDict
 
 logger = logging.getLogger(__name__)
 
@@ -203,7 +204,8 @@ class ReplayDlqUseCase:
 
             try:
                 for raw in iter_jsonl_gz(file_path):
-                    original_record = cast(dict[str, object], raw.get("original_record", {}))
+                    value = raw.get("original_record", {})
+                    original_record: JSONDict = value if isinstance(value, dict) else {}
                     error_message = cast(str, raw.get("error_message", ""))
                     error_type = cast(str, raw.get("error_type", "Unknown"))
                     stage = DeadLetterStage(
