@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from typing import Any
 
 from confluent_kafka import KafkaException, Producer
 
 from etl.infrastructure.kafka.serializer import KafkaSerializer
 from etl.runtime.retry import RetryConfig, retry
+from etl.utils.json import JSONDict
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +56,7 @@ class KafkaEventPublisher:
         )
 
     @retry(**RetryConfig.KAFKA_PUBLISH, exceptions=(KafkaException, BufferError))
-    def publish_batch(self, topic: str, messages: list[dict[str, Any]]) -> None:
+    def publish_batch(self, topic: str, messages: Sequence[JSONDict]) -> None:
         """
         Publish a list of dicts to a Kafka topic.
 
