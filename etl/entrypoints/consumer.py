@@ -26,6 +26,7 @@ import logging
 import sys
 
 from etl.config.settings import get_settings
+from etl.domain.trip.repositories import TripRepository
 from etl.infrastructure.kafka.consumer import KafkaConsumerAdapter
 from etl.runtime.lifecycle import AppComponents, shutdown, startup
 from etl.runtime.shutdown import ShutdownHandler
@@ -33,7 +34,7 @@ from etl.runtime.shutdown import ShutdownHandler
 logger = logging.getLogger(__name__)
 
 
-def _build_trip_repository(components: AppComponents) -> object:
+def _build_trip_repository(components: AppComponents) -> TripRepository:
     """
     Wire ClickHouseTripRepository with the initialised ClickHouseClient.
 
@@ -41,6 +42,10 @@ def _build_trip_repository(components: AppComponents) -> object:
     infrastructure/clickhouse/ is generated.
     """
     from etl.infrastructure.clickhouse.repository import ClickHouseTripRepository
+
+    if components.clickhouse_client is None:
+        raise RuntimeError("startup() did not initialize ClickHouse client")
+
     return ClickHouseTripRepository(client=components.clickhouse_client)
 
 
@@ -74,7 +79,7 @@ def main() -> None:
 
         for batch in consumer_adapter.consume_batches(handler):
             try:
-                trip_repository.save_batch_from_dicts(  # type: ignore[union-attr]
+                trip_repository.save_batch_from_dicts(
                     batch.rows
                 )
 

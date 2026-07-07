@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from etl.domain.trip.models import Trip, Zone
 
@@ -23,6 +24,16 @@ class TripRepository(ABC):
         Implementations must be idempotent -- the same batch may arrive
         twice on Kafka replay. ClickHouse handles deduplication via
         ReplacingMergeTree on trip_id.
+        """
+
+    @abstractmethod
+    def save_batch_from_dicts(self, rows: list[dict[str, Any]]) -> None:
+        """
+        Persist a batch of trip records represented as dictionaries.
+
+        This method is intended for ETL workflows where trip data is already
+        available as dictionaries, avoiding the need to reconstruct Trip
+        aggregates before persistence.
         """
 
     @abstractmethod
