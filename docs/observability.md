@@ -4,7 +4,6 @@
 
 The pipeline exposes three observability signals: structured logs, Prometheus metrics, and optional OpenTelemetry traces. All three share the same `correlation_id` (batch UUID) so a single value ties together log lines, metric labels, and trace spans for any given batch.
 
----
 
 ## Structured Logging
 
@@ -46,7 +45,6 @@ Log level is controlled by `LOG_LEVEL` in `.env` (default `INFO`). Set `DEBUG` f
 | `etl.infrastructure.kafka.dead_letter_publisher` | `DLQ record delivered` | `topic`, `partition`, `offset` |
 | `etl.application.services.ingestion_service` | `Ingestion complete` | `total_rows`, `reject_rate` |
 
----
 
 ## Prometheus Metrics
 
@@ -73,7 +71,7 @@ sum by (stage) (increase(dlq_records_total[5m]))
 
 **`batch_insert_duration_seconds`** — Histogram
 
-Wall-clock duration of each ClickHouse `insert_dataframe()` call. Buckets: 10ms to 10s.
+Wall-clock duration of each ClickHouse `execute(columnar=True)` call. Buckets: 10ms to 10s.
 
 ```promql
 histogram_quantile(0.95, rate(batch_insert_duration_seconds_bucket[5m]))  # p95 latency
@@ -112,7 +110,6 @@ ClickHouse exposes its own Prometheus endpoint on port `9363` (configured in `de
 | `ClickHouseMetrics_BackgroundMergesAndMutationsPoolTask` | Active merge threads |
 | `ClickHouseAsyncInsertCacheHits` | Async insert buffer utilisation |
 
----
 
 ## Grafana Dashboards
 
@@ -126,7 +123,6 @@ Dashboard provisioned at startup from `deployments/docker/grafana/dashboards/etl
 
 Both Prometheus and ClickHouse are wired as datasources. Prometheus powers the ETL metrics panels. ClickHouse can be queried directly in Grafana Explore for ad-hoc SQL against `taxi.trips` and the materialized view tables.
 
----
 
 ## Health Endpoint
 
@@ -153,7 +149,6 @@ HTTP status codes: `200` (ok), `207` (degraded), `503` (down).
 
 Used by Docker health checks in `docker-compose.yml` and by Kubernetes liveness probes.
 
----
 
 ## Correlation IDs
 
@@ -180,7 +175,6 @@ bash scripts/check_kafka_lag.sh --watch        # refresh every 5 seconds
 bash scripts/check_kafka_lag.sh --alert=10000  # exit 1 if lag > 10000
 ```
 
----
 
 ## OpenTelemetry (optional)
 
