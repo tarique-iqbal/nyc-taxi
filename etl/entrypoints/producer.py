@@ -63,6 +63,12 @@ def main() -> None:
     try:
         components = startup(mode="producer")
 
+        if components.zone_repository is None:
+            raise RuntimeError("startup() did not initialize zone repository")
+
+        if components.kafka_producer is None:
+            raise RuntimeError("startup() did not initialize Kafka producer")
+
         # Ensure Kafka topics exist before publishing.
         topic_manager = TopicManager(
             bootstrap_servers=settings.kafka.bootstrap_servers

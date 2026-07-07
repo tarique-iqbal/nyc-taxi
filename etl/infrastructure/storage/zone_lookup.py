@@ -2,46 +2,16 @@ from __future__ import annotations
 
 import csv
 import logging
-from dataclasses import dataclass
 from pathlib import Path
 
 from etl.config.settings import get_settings
+from etl.domain.trip.models import Zone
+from etl.domain.trip.repositories import ZoneRepository
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class ZoneRecord:
-    """
-    Holds zone metadata for a single TLC location ID.
-
-    Immutable by design -- zone data is static reference data loaded
-    once at startup and never mutated during the pipeline run.
-    """
-
-    location_id: int
-    borough: str
-    zone: str
-    service_zone: str
-
-    @classmethod
-    def unknown(cls, location_id: int) -> ZoneRecord:
-        """
-        Fallback record used when a location_id is not found.
-
-        The enricher calls this instead of raising so a missing zone
-        never crashes the pipeline. The trip is still valid -- it is
-        enriched with 'Unknown' labels rather than rejected.
-        """
-        return cls(
-            location_id=location_id,
-            borough="Unknown",
-            zone="Unknown",
-            service_zone="Unknown",
-        )
-
-
-class CsvZoneRepository:
+class CsvZoneRepository(ZoneRepository):
     """
     Implements the ZoneRepository interface using a CSV file as the source.
 
@@ -61,7 +31,7 @@ class CsvZoneRepository:
     def __init__(self, path: Path | None = None) -> None:
         settings = get_settings()
         self._path = path or settings.etl.zone_lookup_path
-        self._zones: dict[int, ZoneRecord] = {}
+        self._zones: dict[int, Zone] = {}
         self._loaded = False
 
     def load(self) -> None:
@@ -78,7 +48,7 @@ class CsvZoneRepository:
         if not self._path.exists():
             raise FileNotFoundError(f"Zone lookup CSV not found: {self._path}")
 
-        zones: dict[int, ZoneRecord] = {}
+        zones: dict[int, Zone] = {}
 
         with open(self._path, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -92,7 +62,7 @@ class CsvZoneRepository:
                     )
                     continue
 
-                zones[location_id] = ZoneRecord(
+                zones[location_id] = Zone(
                     location_id=location_id,
                     borough=row.get("Borough", "Unknown").strip(),
                     zone=row.get("Zone", "Unknown").strip(),
@@ -107,11 +77,11 @@ class CsvZoneRepository:
             extra={"path": str(self._path), "zone_count": len(self._zones)},
         )
 
-    def get_by_id(self, location_id: int) -> ZoneRecord:
+    def get_by_id(self, location_id: int) -> Zone:
         """
-        Return the ZoneRecord for the given location_id.
+        Return the Zone for the given location_id.
 
-        Returns ZoneRecord.unknown() if the ID is not in the lookup
+        Returns Zone.unknown() if the ID is not in the lookup
         rather than raising, so a stale or unexpected location ID
         never fails an otherwise valid trip.
 
@@ -130,11 +100,11 @@ class CsvZoneRepository:
                 "Zone ID not found, returning unknown",
                 extra={"location_id": location_id},
             )
-            return ZoneRecord.unknown(location_id)
+            return Zone.unknown(location_id)
 
         return record
 
-    def load_all(self) -> dict[int, ZoneRecord]:
+    def load_all(self) -> dict[int, Zone]:
         """
         Return the full lookup dict.
 

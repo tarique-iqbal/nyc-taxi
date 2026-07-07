@@ -6,6 +6,7 @@ from typing import Any
 
 from confluent_kafka import KafkaException, Producer
 
+from etl.application import EventPublisher
 from etl.infrastructure.kafka.serializer import KafkaSerializer
 from etl.runtime.retry import RetryConfig, retry
 from etl.utils.json import JSONDict
@@ -13,7 +14,7 @@ from etl.utils.json import JSONDict
 logger = logging.getLogger(__name__)
 
 
-class KafkaEventPublisher:
+class KafkaEventPublisher(EventPublisher):
     """
     Implements the EventPublisher port defined in the application layer.
 
