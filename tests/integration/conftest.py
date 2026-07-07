@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import uuid
 from pathlib import Path
 
@@ -107,13 +108,11 @@ def batch_id() -> str:
 def cleanup_batch(ch_client, batch_id):
     """Delete rows inserted by this batch after the test completes."""
     yield batch_id
-    try:
+    with contextlib.suppress(Exception):
         ch_client.execute(
             "ALTER TABLE taxi.trips DELETE WHERE batch_id = %(batch_id)s",
             {"batch_id": batch_id},
         )
-    except Exception:
-        pass
 
 
 @pytest.fixture(scope="session")
