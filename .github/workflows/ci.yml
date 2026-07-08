@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+
+  # Lint
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install ruff
+        run: pip install ruff==0.4.4
+
+      - name: Check formatting
+        run: ruff format --check etl/ tests/
+
+      - name: Check lint rules
+        run: ruff check etl/ tests/
+
+  # Type check
+  typecheck:
+    name: Type check (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run mypy
+        run: mypy etl/
+
+  # Unit tests
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run unit tests
+        run: |
+          pytest tests/unit/ \
+            --cov=etl \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-fail-under=80 \
+            -v
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-coverage
+          path: coverage.xml
+          retention-days: 7
+
+  # Build check
+  build:
+    name: Build check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build package
+        run: python -m build --wheel --no-isolation
+
+      - name: Verify wheel
+        run: |
+          pip install dist/*.whl
+          python -c "import etl; print('Package import OK')"
