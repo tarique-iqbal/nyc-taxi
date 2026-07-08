@@ -1796,6 +1796,22 @@ pytest = ">=7"
 testing = ["process-tests", "pytest-xdist", "virtualenv"]
 
 [[package]]
+name = "pytest-timeout"
+version = "2.4.0"
+description = "pytest plugin to abort hanging tests"
+optional = true
+python-versions = ">=3.7"
+groups = ["main"]
+markers = "extra == \"dev\""
+files = [
+    {file = "pytest_timeout-2.4.0-py3-none-any.whl", hash = "sha256:c42667e5cdadb151aeb5b26d114aff6bdf5a907f176a007a30b940d3d865b5c2"},
+    {file = "pytest_timeout-2.4.0.tar.gz", hash = "sha256:7e68e90b01f9eff71332b25001f85c75495fc4e3a836701876183c4bcfd0540a"},
+]
+
+[package.dependencies]
+pytest = ">=7.0.0"
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 description = "Extensions to the standard Python datetime module"
@@ -2140,10 +2156,10 @@ files = [
 cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and python_version < \"3.14\"", "cffi (>=2.0.0b0) ; platform_python_implementation != \"PyPy\" and python_version >= \"3.14\""]
 
 [extras]
-dev = ["mypy", "pytest", "pytest-asyncio", "pytest-cov", "ruff"]
+dev = ["mypy", "pytest", "pytest-asyncio", "pytest-cov", "pytest-timeout", "ruff"]
 otel = ["opentelemetry-api", "opentelemetry-exporter-otlp", "opentelemetry-sdk"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "88a641b154ec9377469b9a0a3d1d1f81f32eda80046ff5a734ba9260f6248e4c"
+content-hash = "61530b119209b249aca74697c9f71e8e33faf07e86eeacfb77026c9fadbc5c4c"
