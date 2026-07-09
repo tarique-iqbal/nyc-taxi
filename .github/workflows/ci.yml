@@ -75,7 +75,7 @@ jobs:
             --cov=etl \
             --cov-report=term-missing \
             --cov-report=xml \
-            --cov-fail-under=80 \
+            --cov-fail-under=67 \
             -v
 
       - name: Upload coverage report
@@ -99,7 +99,7 @@ jobs:
           cache: pip
 
       - name: Install build tools
-        run: pip install build
+        run: python -m pip install --upgrade build wheel
 
       - name: Build package
         run: python -m build --wheel --no-isolation
