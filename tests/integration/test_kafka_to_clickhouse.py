@@ -377,13 +377,12 @@ def test_repository_accepts_iso8601_timestamp_strings(
     domain_service,
     trip_repository,
     ch_client,
-    cleanup_batch,
+    batch_id,
+    cleanup_clickhouse,
 ):
     """
     Repository must accept Kafka-style ISO8601 datetime strings.
     """
-    batch_id = cleanup_batch
-
     raw_rows = _read_parquet_rows(SAMPLE_PARQUET)
 
     valid_trips, _ = domain_service.process_batch(
@@ -394,12 +393,13 @@ def test_repository_accepts_iso8601_timestamp_strings(
 
     row = valid_trips[0].to_dict()
 
-    # Kafka JSON serialization already produces ISO strings
     assert isinstance(row["pickup_datetime"], str)
     assert isinstance(row["dropoff_datetime"], str)
 
+    # Verify repository handles ISO8601 timestamp strings from Kafka payloads.
     trip_repository.save_batch_from_dicts([row])
 
+    # Confirm ClickHouse accepted the row.
     persisted = _wait_for_rows(
         ch_client,
         batch_id,
