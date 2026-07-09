@@ -2162,4 +2162,4 @@ otel = ["opentelemetry-api", "opentelemetry-exporter-otlp", "opentelemetry-sdk"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "61530b119209b249aca74697c9f71e8e33faf07e86eeacfb77026c9fadbc5c4c"
+content-hash = "ca73ba60dedb1c1c63de5dcf15c063a2a2895fe7bc0ac11c2f451a81b9c1969f"
