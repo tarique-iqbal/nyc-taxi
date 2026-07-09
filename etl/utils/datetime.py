@@ -73,9 +73,7 @@ def parse_timestamp_strict(value: Any, field_name: str = "timestamp") -> datetim
     """
     result = parse_timestamp(value)
     if result is None:
-        raise ValueError(
-            f"Cannot parse '{field_name}' value '{value}' as a datetime."
-        )
+        raise ValueError(f"Cannot parse '{field_name}' value '{value}' as a datetime.")
     return result
 
 

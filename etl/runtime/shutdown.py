@@ -96,6 +96,4 @@ class ShutdownHandler:
             try:
                 callback()
             except Exception as exc:
-                logger.warning(
-                    "Shutdown callback failed: %s", exc, exc_info=True
-                )
+                logger.warning("Shutdown callback failed: %s", exc, exc_info=True)

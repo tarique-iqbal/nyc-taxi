@@ -104,9 +104,7 @@ class SchemaManager:
 
     def _applied_versions(self) -> dict[str, str]:
         """Return {version: checksum} for all applied migrations."""
-        rows = self._client.execute(
-            "SELECT version, checksum FROM taxi.schema_migrations FINAL"
-        )
+        rows = self._client.execute("SELECT version, checksum FROM taxi.schema_migrations FINAL")
         return {row[0]: row[1] for row in rows}
 
     def _discover_migrations(self) -> list[Path]:

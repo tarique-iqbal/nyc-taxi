@@ -160,10 +160,7 @@ class IngestionService:
 
         # Step 4: dead-letter invalid domain records
         if invalid_events:
-            dl_records = [
-                DeadLetterRecord.from_invalid_event(event)
-                for event in invalid_events
-            ]
+            dl_records = [DeadLetterRecord.from_invalid_event(event) for event in invalid_events]
             self._dead_letter_service.send_batch(dl_records)
 
         logger.info(

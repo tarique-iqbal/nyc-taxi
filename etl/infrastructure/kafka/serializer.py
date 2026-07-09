@@ -32,8 +32,7 @@ class KafkaSerializer:
             return dumps(message).encode("utf-8")
         except (TypeError, ValueError) as exc:
             raise ValueError(
-                f"Cannot serialise Kafka message: {exc}. "
-                f"Message keys: {list(message.keys())}"
+                f"Cannot serialise Kafka message: {exc}. Message keys: {list(message.keys())}"
             ) from exc
 
     def deserialize(self, data: bytes | None) -> dict[str, Any] | None:

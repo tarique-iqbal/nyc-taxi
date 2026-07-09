@@ -101,37 +101,27 @@ def test_two_commands_get_different_batch_ids():
 
 # ProcessBatchResult
 def test_result_total_is_valid_plus_invalid():
-    result = ProcessBatchResult(
-        batch_id="x", valid_count=8, invalid_count=2, duration_seconds=0.1
-    )
+    result = ProcessBatchResult(batch_id="x", valid_count=8, invalid_count=2, duration_seconds=0.1)
     assert result.total == 10
 
 
 def test_result_reject_rate_zero_when_no_invalid():
-    result = ProcessBatchResult(
-        batch_id="x", valid_count=10, invalid_count=0, duration_seconds=0.1
-    )
+    result = ProcessBatchResult(batch_id="x", valid_count=10, invalid_count=0, duration_seconds=0.1)
     assert result.reject_rate == 0.0
 
 
 def test_result_reject_rate_calculated_correctly():
-    result = ProcessBatchResult(
-        batch_id="x", valid_count=8, invalid_count=2, duration_seconds=0.1
-    )
+    result = ProcessBatchResult(batch_id="x", valid_count=8, invalid_count=2, duration_seconds=0.1)
     assert abs(result.reject_rate - 0.2) < 1e-9
 
 
 def test_result_reject_rate_zero_when_total_zero():
-    result = ProcessBatchResult(
-        batch_id="x", valid_count=0, invalid_count=0, duration_seconds=0.0
-    )
+    result = ProcessBatchResult(batch_id="x", valid_count=0, invalid_count=0, duration_seconds=0.0)
     assert result.reject_rate == 0.0
 
 
 def test_result_reject_rate_one_when_all_invalid():
-    result = ProcessBatchResult(
-        batch_id="x", valid_count=0, invalid_count=5, duration_seconds=0.1
-    )
+    result = ProcessBatchResult(batch_id="x", valid_count=0, invalid_count=5, duration_seconds=0.1)
     assert result.reject_rate == 1.0
 
 
@@ -217,9 +207,7 @@ def test_handle_does_not_publish_when_all_invalid():
 def test_handle_mixed_valid_and_invalid():
     trips = [_make_trip("good")]
     events = [_make_invalid_event("bad")]
-    use_case, _, publisher, dl_service = _make_use_case(
-        valid_trips=trips, invalid_events=events
-    )
+    use_case, _, publisher, dl_service = _make_use_case(valid_trips=trips, invalid_events=events)
     cmd = ProcessBatchCommand(raw_rows=[{}, {}], source_file="test.parquet")
 
     result = use_case.handle(cmd)
@@ -256,8 +244,7 @@ def test_handle_passes_batch_id_and_source_file_to_domain_service():
 
     domain_service.process_batch.assert_called_once()
     kwargs = domain_service.process_batch.call_args
-    assert kwargs.kwargs.get("batch_id") == "fixed-batch-id" or \
-           kwargs.args[1] == "fixed-batch-id"
+    assert kwargs.kwargs.get("batch_id") == "fixed-batch-id" or kwargs.args[1] == "fixed-batch-id"
 
 
 # ProcessBatchUseCase.handle: duration
@@ -272,9 +259,7 @@ def test_handle_result_has_positive_duration():
 
 def test_handle_result_batch_id_matches_command():
     use_case, _, _, _ = _make_use_case()
-    cmd = ProcessBatchCommand(
-        raw_rows=[], source_file="test.parquet", batch_id="my-batch"
-    )
+    cmd = ProcessBatchCommand(raw_rows=[], source_file="test.parquet", batch_id="my-batch")
 
     result = use_case.handle(cmd)
 

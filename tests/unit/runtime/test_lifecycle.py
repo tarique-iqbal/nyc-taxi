@@ -36,6 +36,7 @@ def test_app_components_fields_can_be_set():
 
 def test_app_components_is_dataclass():
     import dataclasses
+
     assert dataclasses.is_dataclass(AppComponents)
 
 
@@ -216,9 +217,7 @@ def test_shutdown_with_no_components_set():
 # startup: mode parameter (mocked)
 @patch("etl.infrastructure.storage.zone_lookup.CsvZoneRepository")
 @patch("etl.infrastructure.kafka.producer.KafkaEventPublisher")
-def test_startup_producer_mode_creates_kafka_producer(
-    MockPublisher, MockZoneRepo
-):
+def test_startup_producer_mode_creates_kafka_producer(MockPublisher, MockZoneRepo):
     from etl.runtime.lifecycle import startup
 
     mock_repo_instance = MagicMock()

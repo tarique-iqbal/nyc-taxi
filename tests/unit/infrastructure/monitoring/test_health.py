@@ -23,34 +23,42 @@ def test_component_health_with_detail():
 
 # HealthReport.overall
 def test_overall_ok_when_all_ok():
-    report = HealthReport(components=[
-        ComponentHealth("kafka", HealthStatus.OK),
-        ComponentHealth("clickhouse", HealthStatus.OK),
-    ])
+    report = HealthReport(
+        components=[
+            ComponentHealth("kafka", HealthStatus.OK),
+            ComponentHealth("clickhouse", HealthStatus.OK),
+        ]
+    )
     assert report.overall == HealthStatus.OK
 
 
 def test_overall_down_when_any_down():
-    report = HealthReport(components=[
-        ComponentHealth("kafka", HealthStatus.OK),
-        ComponentHealth("clickhouse", HealthStatus.DOWN),
-    ])
+    report = HealthReport(
+        components=[
+            ComponentHealth("kafka", HealthStatus.OK),
+            ComponentHealth("clickhouse", HealthStatus.DOWN),
+        ]
+    )
     assert report.overall == HealthStatus.DOWN
 
 
 def test_overall_degraded_when_any_degraded_none_down():
-    report = HealthReport(components=[
-        ComponentHealth("kafka", HealthStatus.OK),
-        ComponentHealth("clickhouse", HealthStatus.DEGRADED),
-    ])
+    report = HealthReport(
+        components=[
+            ComponentHealth("kafka", HealthStatus.OK),
+            ComponentHealth("clickhouse", HealthStatus.DEGRADED),
+        ]
+    )
     assert report.overall == HealthStatus.DEGRADED
 
 
 def test_overall_down_beats_degraded():
-    report = HealthReport(components=[
-        ComponentHealth("kafka", HealthStatus.DEGRADED),
-        ComponentHealth("clickhouse", HealthStatus.DOWN),
-    ])
+    report = HealthReport(
+        components=[
+            ComponentHealth("kafka", HealthStatus.DEGRADED),
+            ComponentHealth("clickhouse", HealthStatus.DOWN),
+        ]
+    )
     assert report.overall == HealthStatus.DOWN
 
 
@@ -60,19 +68,23 @@ def test_overall_ok_for_empty_components():
 
 
 def test_overall_all_down():
-    report = HealthReport(components=[
-        ComponentHealth("kafka", HealthStatus.DOWN),
-        ComponentHealth("clickhouse", HealthStatus.DOWN),
-    ])
+    report = HealthReport(
+        components=[
+            ComponentHealth("kafka", HealthStatus.DOWN),
+            ComponentHealth("clickhouse", HealthStatus.DOWN),
+        ]
+    )
     assert report.overall == HealthStatus.DOWN
 
 
 # HealthReport.as_dict
 def test_as_dict_shape():
-    report = HealthReport(components=[
-        ComponentHealth("kafka", HealthStatus.OK),
-        ComponentHealth("clickhouse", HealthStatus.OK),
-    ])
+    report = HealthReport(
+        components=[
+            ComponentHealth("kafka", HealthStatus.OK),
+            ComponentHealth("clickhouse", HealthStatus.OK),
+        ]
+    )
     d = report.as_dict()
     assert "status" in d
     assert "components" in d
@@ -82,9 +94,11 @@ def test_as_dict_shape():
 
 
 def test_as_dict_component_has_status_and_detail():
-    report = HealthReport(components=[
-        ComponentHealth("kafka", HealthStatus.DOWN, detail="timeout"),
-    ])
+    report = HealthReport(
+        components=[
+            ComponentHealth("kafka", HealthStatus.DOWN, detail="timeout"),
+        ]
+    )
     d = report.as_dict()
     kafka = d["components"]["kafka"]
     assert kafka["status"] == "down"
@@ -92,10 +106,12 @@ def test_as_dict_component_has_status_and_detail():
 
 
 def test_as_dict_overall_status_matches_overall_property():
-    report = HealthReport(components=[
-        ComponentHealth("kafka", HealthStatus.DEGRADED),
-        ComponentHealth("clickhouse", HealthStatus.OK),
-    ])
+    report = HealthReport(
+        components=[
+            ComponentHealth("kafka", HealthStatus.DEGRADED),
+            ComponentHealth("clickhouse", HealthStatus.OK),
+        ]
+    )
     d = report.as_dict()
     assert d["status"] == report.overall.value
 
@@ -109,6 +125,7 @@ def test_health_status_values():
 
 def test_health_status_serialises_as_string():
     import json
+
     report = HealthReport(components=[ComponentHealth("x", HealthStatus.OK)])
     d = report.as_dict()
     serialised = json.dumps(d)

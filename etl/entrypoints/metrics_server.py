@@ -43,6 +43,7 @@ def main() -> None:
         # Block indefinitely. The server runs in a background daemon thread
         # started by start_http_server(). The main thread must stay alive.
         import time
+
         while True:
             time.sleep(60)
 

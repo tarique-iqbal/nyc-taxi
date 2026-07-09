@@ -131,9 +131,12 @@ def test_format_includes_exception_when_exc_info_set():
         raise ValueError("test error")
     except ValueError:
         record = logging.LogRecord(
-            name="etl.test", level=logging.ERROR,
-            pathname="test.py", lineno=1,
-            msg="Something failed", args=(),
+            name="etl.test",
+            level=logging.ERROR,
+            pathname="test.py",
+            lineno=1,
+            msg="Something failed",
+            args=(),
             exc_info=sys.exc_info(),
         )
     formatter = JsonFormatter()

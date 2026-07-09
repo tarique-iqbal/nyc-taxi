@@ -296,9 +296,7 @@ def test_run_flush_called_even_after_shutdown():
         dead_letter_service=MagicMock(),
         topic="nyc-taxi-trips",
         shutdown_handler=handler,
-        validation_service=MagicMock(
-            validate_batch=MagicMock(return_value=([], []))
-        ),
+        validation_service=MagicMock(validate_batch=MagicMock(return_value=([], []))),
     )
     service.run()
     publisher.flush.assert_called_once()
@@ -339,5 +337,5 @@ def test_run_accumulates_counts_across_batches():
 
     assert summary.total_batches == 2
     assert summary.total_rows == 5
-    assert summary.total_valid == 3   # 1 + 2
+    assert summary.total_valid == 3  # 1 + 2
     assert summary.total_invalid == 1

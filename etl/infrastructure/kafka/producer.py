@@ -50,8 +50,8 @@ class KafkaEventPublisher(EventPublisher):
                 "retries": retries,
                 "enable.idempotence": "true",
                 "max.in.flight.requests.per.connection": 5,
-                "linger.ms": 5,            # small batching window at the network level
-                "batch.size": 65536,       # 64 KB per broker batch
+                "linger.ms": 5,  # small batching window at the network level
+                "batch.size": 65536,  # 64 KB per broker batch
                 "compression.type": "lz4",
             }
         )

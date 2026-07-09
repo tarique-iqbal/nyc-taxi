@@ -141,6 +141,7 @@ def test_pickup_exactly_at_tlc_min_date_passes():
 
 def test_future_pickup_rejected():
     from datetime import timedelta
+
     far_future = datetime.now(UTC) + timedelta(days=365)
     trip = _trip(
         pickup_datetime=far_future,

@@ -36,14 +36,17 @@ def test_vendor_string_none_returns_unknown():
 
 
 # Payment type
-@pytest.mark.parametrize("code,expected", [
-    (1, "Credit card"),
-    (2, "Cash"),
-    (3, "No charge"),
-    (4, "Dispute"),
-    (5, "Unknown"),
-    (6, "Voided trip"),
-])
+@pytest.mark.parametrize(
+    "code,expected",
+    [
+        (1, "Credit card"),
+        (2, "Cash"),
+        (3, "No charge"),
+        (4, "Dispute"),
+        (5, "Unknown"),
+        (6, "Voided trip"),
+    ],
+)
 def test_payment_type_codes_mapped(code: int, expected: str):
     result = TripNormalizer.normalize({"payment_type": code})
     assert result["payment_type"] == expected
@@ -60,14 +63,17 @@ def test_payment_type_none():
 
 
 # Rate code
-@pytest.mark.parametrize("code,expected", [
-    (1, "Standard"),
-    (2, "JFK"),
-    (3, "Newark"),
-    (4, "Nassau or Westchester"),
-    (5, "Negotiated fare"),
-    (6, "Group ride"),
-])
+@pytest.mark.parametrize(
+    "code,expected",
+    [
+        (1, "Standard"),
+        (2, "JFK"),
+        (3, "Newark"),
+        (4, "Nassau or Westchester"),
+        (5, "Negotiated fare"),
+        (6, "Group ride"),
+    ],
+)
 def test_rate_code_mapped(code: int, expected: str):
     result = TripNormalizer.normalize({"rate_code_id": code})
     assert result["rate_code"] == expected
@@ -111,12 +117,15 @@ def test_passenger_count_float_coerced():
 
 
 # Store and forward flag
-@pytest.mark.parametrize("raw,expected", [
-    ("Y", "Yes"),
-    ("N", "No"),
-    ("y", "Yes"),
-    ("n", "No"),
-])
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        ("Y", "Yes"),
+        ("N", "No"),
+        ("y", "Yes"),
+        ("n", "No"),
+    ],
+)
 def test_store_and_fwd_flag_mapped(raw: str, expected: str):
     result = TripNormalizer.normalize({"store_and_fwd_flag": raw})
     assert result["store_and_fwd_flag"] == expected

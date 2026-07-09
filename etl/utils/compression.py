@@ -54,9 +54,7 @@ def read_jsonl_gz(path: Path) -> list[JSONDict]:
             try:
                 records.append(loads(line))
             except Exception as exc:
-                raise ValueError(
-                    f"Malformed JSON on line {line_num} of {path}: {exc}"
-                ) from exc
+                raise ValueError(f"Malformed JSON on line {line_num} of {path}: {exc}") from exc
 
     return records
 

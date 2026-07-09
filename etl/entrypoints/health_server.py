@@ -49,6 +49,7 @@ def _get_checker() -> HealthChecker:
         settings = get_settings()
         try:
             from etl.infrastructure.clickhouse.client import ClickHouseClient
+
             ch_client = ClickHouseClient(
                 host=settings.clickhouse.host,
                 port=settings.clickhouse.port,
@@ -112,7 +113,7 @@ def main() -> None:
             "etl.entrypoints.health_server:app",
             host="0.0.0.0",
             port=port,
-            log_config=None,   # suppress uvicorn default logging; use our JSON formatter
+            log_config=None,  # suppress uvicorn default logging; use our JSON formatter
             access_log=False,
         )
     except Exception as exc:

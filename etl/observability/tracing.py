@@ -87,9 +87,7 @@ def span(name: str, **attributes: Any) -> Generator[Any, None, None]:
             yield current_span
         except Exception as exc:
             current_span.record_exception(exc)
-            current_span.set_status(
-                trace.status.Status(trace.status.StatusCode.ERROR, str(exc))
-            )
+            current_span.set_status(trace.status.Status(trace.status.StatusCode.ERROR, str(exc)))
             raise
 
 
@@ -104,6 +102,7 @@ def traced(span_name: str | None = None, **span_attrs: Any) -> Callable[[F], F]:
         def publish_batch(self, messages):
             ...
     """
+
     def decorator(func: F) -> F:
         name = span_name or f"{func.__module__}.{func.__qualname__}"
 

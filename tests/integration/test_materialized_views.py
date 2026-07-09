@@ -52,6 +52,7 @@ FIXTURE_CASH_COUNT = 2
 
 def _read_parquet_rows(path: Path) -> list[dict]:
     from etl.infrastructure.storage.parquet_reader import ParquetReader
+
     rows = []
     for batch in ParquetReader(path=path, batch_size=100).iter_batches():
         rows.extend(batch)
@@ -60,8 +61,7 @@ def _read_parquet_rows(path: Path) -> list[dict]:
 
 def _raw_count_for_date(ch_client, date: str) -> int:
     result = ch_client.execute(
-        "SELECT count() FROM taxi.trips FINAL "
-        "WHERE toDate(pickup_datetime) = %(date)s",
+        "SELECT count() FROM taxi.trips FINAL WHERE toDate(pickup_datetime) = %(date)s",
         {"date": date},
     )
     return int(result[0][0]) if result else 0
@@ -69,8 +69,7 @@ def _raw_count_for_date(ch_client, date: str) -> int:
 
 def _raw_fare_sum_for_date(ch_client, date: str) -> float:
     result = ch_client.execute(
-        "SELECT sum(total_amount) FROM taxi.trips FINAL "
-        "WHERE toDate(pickup_datetime) = %(date)s",
+        "SELECT sum(total_amount) FROM taxi.trips FINAL WHERE toDate(pickup_datetime) = %(date)s",
         {"date": date},
     )
     return float(result[0][0]) if result else 0.0
@@ -87,9 +86,7 @@ def _insert_fixture(domain_service, trip_repository, batch_id: str) -> None:
 
 
 # trips_hourly_mv
-def test_hourly_mv_count_matches_raw(
-    domain_service, trip_repository, ch_client, cleanup_batch
-):
+def test_hourly_mv_count_matches_raw(domain_service, trip_repository, ch_client, cleanup_batch):
     """
     countMerge from trips_hourly_mv for 2024-01-15 must equal count
     from raw trips table for the same date.
@@ -99,9 +96,7 @@ def test_hourly_mv_count_matches_raw(
     raw_count = _raw_count_for_date(ch_client, FIXTURE_DATE)
 
     mv_result = ch_client.execute(
-        "SELECT countMerge(trip_count) "
-        "FROM taxi.trips_hourly_mv "
-        "WHERE toDate(hour) = %(date)s",
+        "SELECT countMerge(trip_count) FROM taxi.trips_hourly_mv WHERE toDate(hour) = %(date)s",
         {"date": FIXTURE_DATE},
     )
     mv_count = int(mv_result[0][0]) if mv_result and mv_result[0][0] else 0
@@ -120,18 +115,14 @@ def test_hourly_mv_five_distinct_hour_buckets(
     _insert_fixture(domain_service, trip_repository, cleanup_batch)
 
     result = ch_client.execute(
-        "SELECT count(DISTINCT hour) "
-        "FROM taxi.trips_hourly_mv "
-        "WHERE toDate(hour) = %(date)s",
+        "SELECT count(DISTINCT hour) FROM taxi.trips_hourly_mv WHERE toDate(hour) = %(date)s",
         {"date": FIXTURE_DATE},
     )
     distinct_hours = int(result[0][0]) if result else 0
     assert distinct_hours >= 5
 
 
-def test_hourly_mv_vendor_split(
-    domain_service, trip_repository, ch_client, cleanup_batch
-):
+def test_hourly_mv_vendor_split(domain_service, trip_repository, ch_client, cleanup_batch):
     """
     Vendor-level trip counts from hourly MV match raw table for 2024-01-15.
     Vendor 1: 3 trips (rows 0, 2, 4), Vendor 2: 2 trips (rows 1, 3).
@@ -163,17 +154,13 @@ def test_hourly_mv_vendor_split(
 
 
 # trips_daily_mv
-def test_daily_mv_count_matches_raw(
-    domain_service, trip_repository, ch_client, cleanup_batch
-):
+def test_daily_mv_count_matches_raw(domain_service, trip_repository, ch_client, cleanup_batch):
     _insert_fixture(domain_service, trip_repository, cleanup_batch)
 
     raw_count = _raw_count_for_date(ch_client, FIXTURE_DATE)
 
     mv_result = ch_client.execute(
-        "SELECT countMerge(trip_count) "
-        "FROM taxi.trips_daily_mv "
-        "WHERE day = %(date)s",
+        "SELECT countMerge(trip_count) FROM taxi.trips_daily_mv WHERE day = %(date)s",
         {"date": FIXTURE_DATE},
     )
     mv_count = int(mv_result[0][0]) if mv_result and mv_result[0][0] else 0
@@ -182,9 +169,7 @@ def test_daily_mv_count_matches_raw(
     assert mv_count >= FIXTURE_TRIP_COUNT
 
 
-def test_daily_mv_fare_sum_matches_raw(
-    domain_service, trip_repository, ch_client, cleanup_batch
-):
+def test_daily_mv_fare_sum_matches_raw(domain_service, trip_repository, ch_client, cleanup_batch):
     """
     sumMerge(total_fare) from trips_daily_mv matches sum from raw trips.
     """
@@ -193,9 +178,7 @@ def test_daily_mv_fare_sum_matches_raw(
     raw_sum = _raw_fare_sum_for_date(ch_client, FIXTURE_DATE)
 
     mv_result = ch_client.execute(
-        "SELECT sumMerge(total_fare) "
-        "FROM taxi.trips_daily_mv "
-        "WHERE day = %(date)s",
+        "SELECT sumMerge(total_fare) FROM taxi.trips_daily_mv WHERE day = %(date)s",
         {"date": FIXTURE_DATE},
     )
     mv_sum = float(mv_result[0][0]) if mv_result and mv_result[0][0] else 0.0
@@ -204,9 +187,7 @@ def test_daily_mv_fare_sum_matches_raw(
     assert mv_sum >= FIXTURE_TOTAL_FARE
 
 
-def test_daily_mv_payment_type_split(
-    domain_service, trip_repository, ch_client, cleanup_batch
-):
+def test_daily_mv_payment_type_split(domain_service, trip_repository, ch_client, cleanup_batch):
     """
     Payment type split in daily MV matches raw table.
     Credit card: 3 trips, Cash: 2 trips.
@@ -238,17 +219,13 @@ def test_daily_mv_payment_type_split(
 
 
 # trips_by_borough_mv
-def test_borough_mv_count_matches_raw(
-    domain_service, trip_repository, ch_client, cleanup_batch
-):
+def test_borough_mv_count_matches_raw(domain_service, trip_repository, ch_client, cleanup_batch):
     _insert_fixture(domain_service, trip_repository, cleanup_batch)
 
     raw_count = _raw_count_for_date(ch_client, FIXTURE_DATE)
 
     mv_result = ch_client.execute(
-        "SELECT countMerge(trip_count) "
-        "FROM taxi.trips_by_borough_mv "
-        "WHERE day = %(date)s",
+        "SELECT countMerge(trip_count) FROM taxi.trips_by_borough_mv WHERE day = %(date)s",
         {"date": FIXTURE_DATE},
     )
     mv_count = int(mv_result[0][0]) if mv_result and mv_result[0][0] else 0
@@ -301,17 +278,13 @@ def test_borough_mv_all_dropoffs_in_manhattan(
 
 
 # trips_by_payment_mv
-def test_payment_mv_count_matches_raw(
-    domain_service, trip_repository, ch_client, cleanup_batch
-):
+def test_payment_mv_count_matches_raw(domain_service, trip_repository, ch_client, cleanup_batch):
     _insert_fixture(domain_service, trip_repository, cleanup_batch)
 
     raw_count = _raw_count_for_date(ch_client, FIXTURE_DATE)
 
     mv_result = ch_client.execute(
-        "SELECT countMerge(trip_count) "
-        "FROM taxi.trips_by_payment_mv "
-        "WHERE day = %(date)s",
+        "SELECT countMerge(trip_count) FROM taxi.trips_by_payment_mv WHERE day = %(date)s",
         {"date": FIXTURE_DATE},
     )
     mv_count = int(mv_result[0][0]) if mv_result and mv_result[0][0] else 0
@@ -320,9 +293,7 @@ def test_payment_mv_count_matches_raw(
     assert mv_count >= FIXTURE_TRIP_COUNT
 
 
-def test_payment_mv_credit_card_avg_tip(
-    domain_service, trip_repository, ch_client, cleanup_batch
-):
+def test_payment_mv_credit_card_avg_tip(domain_service, trip_repository, ch_client, cleanup_batch):
     """
     avgMerge(avg_tip) from payment MV matches avg from raw table for credit card.
     """
@@ -347,17 +318,13 @@ def test_payment_mv_credit_card_avg_tip(
 
 
 # trips_by_zone_mv
-def test_zone_mv_count_matches_raw(
-    domain_service, trip_repository, ch_client, cleanup_batch
-):
+def test_zone_mv_count_matches_raw(domain_service, trip_repository, ch_client, cleanup_batch):
     _insert_fixture(domain_service, trip_repository, cleanup_batch)
 
     raw_count = _raw_count_for_date(ch_client, FIXTURE_DATE)
 
     mv_result = ch_client.execute(
-        "SELECT countMerge(trip_count) "
-        "FROM taxi.trips_by_zone_mv "
-        "WHERE day = %(date)s",
+        "SELECT countMerge(trip_count) FROM taxi.trips_by_zone_mv WHERE day = %(date)s",
         {"date": FIXTURE_DATE},
     )
     mv_count = int(mv_result[0][0]) if mv_result and mv_result[0][0] else 0
@@ -376,10 +343,7 @@ def test_zone_mv_known_pickup_zones_present(
     _insert_fixture(domain_service, trip_repository, cleanup_batch)
 
     result = ch_client.execute(
-        "SELECT pickup_zone "
-        "FROM taxi.trips_by_zone_mv "
-        "WHERE day = %(date)s "
-        "GROUP BY pickup_zone",
+        "SELECT pickup_zone FROM taxi.trips_by_zone_mv WHERE day = %(date)s GROUP BY pickup_zone",
         {"date": FIXTURE_DATE},
     )
     zones = {row[0] for row in result}

@@ -9,13 +9,32 @@ from etl.utils.json import dumps
 
 # Standard LogRecord attributes that should not be duplicated
 # in the JSON output as extra fields.
-_STANDARD_LOG_FIELDS: frozenset[str] = frozenset({
-    "args", "created", "exc_info", "exc_text", "filename",
-    "funcName", "levelname", "levelno", "lineno", "message",
-    "module", "msecs", "msg", "name", "pathname", "process",
-    "processName", "relativeCreated", "stack_info", "taskName",
-    "thread", "threadName",
-})
+_STANDARD_LOG_FIELDS: frozenset[str] = frozenset(
+    {
+        "args",
+        "created",
+        "exc_info",
+        "exc_text",
+        "filename",
+        "funcName",
+        "levelname",
+        "levelno",
+        "lineno",
+        "message",
+        "module",
+        "msecs",
+        "msg",
+        "name",
+        "pathname",
+        "process",
+        "processName",
+        "relativeCreated",
+        "stack_info",
+        "taskName",
+        "thread",
+        "threadName",
+    }
+)
 
 
 class JsonFormatter(logging.Formatter):
@@ -43,9 +62,7 @@ class JsonFormatter(logging.Formatter):
         record.message = record.getMessage()
 
         log_entry: dict[str, Any] = {
-            "timestamp": datetime.fromtimestamp(
-                record.created, tz=UTC
-            ).isoformat(),
+            "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.message,

@@ -17,6 +17,7 @@ ZONE_CSV = FIXTURES_DIR / "taxi_zone_lookup.csv"
 def _clickhouse_available() -> bool:
     try:
         from etl.infrastructure.clickhouse.client import ClickHouseClient
+
         settings = get_settings()
         client = ClickHouseClient(
             host=settings.clickhouse.host,
@@ -35,6 +36,7 @@ def _clickhouse_available() -> bool:
 def _kafka_available() -> bool:
     try:
         from confluent_kafka.admin import AdminClient
+
         settings = get_settings()
         admin = AdminClient({"bootstrap.servers": settings.kafka.bootstrap_servers})
         admin.list_topics(timeout=3)
@@ -63,6 +65,7 @@ def settings():
 @pytest.fixture(scope="session")
 def zone_repository():
     from etl.infrastructure.storage.zone_lookup import CsvZoneRepository
+
     repo = CsvZoneRepository(path=ZONE_CSV)
     repo.load()
     return repo
@@ -71,12 +74,14 @@ def zone_repository():
 @pytest.fixture(scope="session")
 def domain_service(zone_repository):
     from etl.domain.trip.services import TripDomainService
+
     return TripDomainService(zone_repository=zone_repository)
 
 
 @pytest.fixture(scope="session")
 def ch_client(settings):
     from etl.infrastructure.clickhouse.client import ClickHouseClient
+
     client = ClickHouseClient(
         host=settings.clickhouse.host,
         port=settings.clickhouse.port,
@@ -87,15 +92,19 @@ def ch_client(settings):
     yield client
     client.close()
 
+
 @pytest.fixture(scope="session")
 def apply_clickhouse_schema(ch_client):
     from etl.infrastructure.clickhouse.schema_manager import SchemaManager
+
     SchemaManager(ch_client).apply_all()
     yield
+
 
 @pytest.fixture(scope="session")
 def trip_repository(ch_client, apply_clickhouse_schema):
     from etl.infrastructure.clickhouse.repository import ClickHouseTripRepository
+
     return ClickHouseTripRepository(client=ch_client)
 
 
@@ -118,6 +127,7 @@ def cleanup_batch(ch_client, batch_id):
 @pytest.fixture(scope="session")
 def kafka_producer(settings):
     from etl.infrastructure.kafka.producer import KafkaEventPublisher
+
     producer = KafkaEventPublisher(
         bootstrap_servers=settings.kafka.bootstrap_servers,
         acks=settings.kafka.producer_acks,
@@ -130,6 +140,7 @@ def kafka_producer(settings):
 @pytest.fixture(scope="function")
 def kafka_consumer(settings):
     from etl.infrastructure.kafka.consumer import KafkaConsumerAdapter
+
     group_id = f"test-group-{uuid.uuid4()}"
     consumer = KafkaConsumerAdapter(
         bootstrap_servers=settings.kafka.bootstrap_servers,
@@ -152,6 +163,7 @@ def tmp_rejected_dir(tmp_path):
 @pytest.fixture(scope="function")
 def dead_letter_service(settings, tmp_rejected_dir):
     from etl.infrastructure.kafka.dead_letter_publisher import KafkaDeadLetterPublisher
+
     return KafkaDeadLetterPublisher(
         bootstrap_servers=settings.kafka.bootstrap_servers,
         dlq_topic=settings.kafka.dlq_topic,

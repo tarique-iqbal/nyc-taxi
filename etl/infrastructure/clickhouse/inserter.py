@@ -15,36 +15,38 @@ logger = logging.getLogger(__name__)
 # Defining it here rather than inferring from the dict avoids type
 # mismatches where Python's type inference disagrees with the
 # ClickHouse column types (e.g. Decimal vs float, UInt8 vs int64).
-TRIPS_ARROW_SCHEMA = pa.schema([
-    pa.field("trip_id",                 pa.string()),
-    pa.field("vendor_id",               pa.string()),
-    pa.field("pickup_datetime",         pa.timestamp("us", tz="UTC")),
-    pa.field("dropoff_datetime",        pa.timestamp("us", tz="UTC")),
-    pa.field("trip_duration_seconds",   pa.uint32()),
-    pa.field("passenger_count",         pa.uint8()),
-    pa.field("trip_distance",           pa.float32()),
-    pa.field("pickup_location_id",      pa.uint16()),
-    pa.field("dropoff_location_id",     pa.uint16()),
-    pa.field("pickup_zone",             pa.string()),
-    pa.field("dropoff_zone",            pa.string()),
-    pa.field("pickup_borough",          pa.string()),
-    pa.field("dropoff_borough",         pa.string()),
-    pa.field("fare_amount",             pa.float64()),
-    pa.field("extra",                   pa.float64()),
-    pa.field("mta_tax",                 pa.float64()),
-    pa.field("tip_amount",              pa.float64()),
-    pa.field("tolls_amount",            pa.float64()),
-    pa.field("improvement_surcharge",   pa.float64()),
-    pa.field("congestion_surcharge",    pa.float64()),
-    pa.field("airport_fee",             pa.float64()),
-    pa.field("total_amount",            pa.float64()),
-    pa.field("payment_type",            pa.string()),
-    pa.field("rate_code",               pa.string()),
-    pa.field("store_and_fwd_flag",      pa.string()),
-    pa.field("ingested_at",             pa.timestamp("us", tz="UTC")),
-    pa.field("batch_id",                pa.string()),
-    pa.field("source_file",             pa.string()),
-])
+TRIPS_ARROW_SCHEMA = pa.schema(
+    [
+        pa.field("trip_id", pa.string()),
+        pa.field("vendor_id", pa.string()),
+        pa.field("pickup_datetime", pa.timestamp("us", tz="UTC")),
+        pa.field("dropoff_datetime", pa.timestamp("us", tz="UTC")),
+        pa.field("trip_duration_seconds", pa.uint32()),
+        pa.field("passenger_count", pa.uint8()),
+        pa.field("trip_distance", pa.float32()),
+        pa.field("pickup_location_id", pa.uint16()),
+        pa.field("dropoff_location_id", pa.uint16()),
+        pa.field("pickup_zone", pa.string()),
+        pa.field("dropoff_zone", pa.string()),
+        pa.field("pickup_borough", pa.string()),
+        pa.field("dropoff_borough", pa.string()),
+        pa.field("fare_amount", pa.float64()),
+        pa.field("extra", pa.float64()),
+        pa.field("mta_tax", pa.float64()),
+        pa.field("tip_amount", pa.float64()),
+        pa.field("tolls_amount", pa.float64()),
+        pa.field("improvement_surcharge", pa.float64()),
+        pa.field("congestion_surcharge", pa.float64()),
+        pa.field("airport_fee", pa.float64()),
+        pa.field("total_amount", pa.float64()),
+        pa.field("payment_type", pa.string()),
+        pa.field("rate_code", pa.string()),
+        pa.field("store_and_fwd_flag", pa.string()),
+        pa.field("ingested_at", pa.timestamp("us", tz="UTC")),
+        pa.field("batch_id", pa.string()),
+        pa.field("source_file", pa.string()),
+    ]
+)
 
 
 def _coerce_row(row: dict[str, Any]) -> dict[str, Any]:
@@ -58,8 +60,15 @@ def _coerce_row(row: dict[str, Any]) -> dict[str, Any]:
     coerced = dict(row)
 
     for money_field in (
-        "fare_amount", "extra", "mta_tax", "tip_amount", "tolls_amount",
-        "improvement_surcharge", "congestion_surcharge", "airport_fee", "total_amount",
+        "fare_amount",
+        "extra",
+        "mta_tax",
+        "tip_amount",
+        "tolls_amount",
+        "improvement_surcharge",
+        "congestion_surcharge",
+        "airport_fee",
+        "total_amount",
     ):
         v = coerced.get(money_field)
         coerced[money_field] = float(v) if v is not None else 0.0

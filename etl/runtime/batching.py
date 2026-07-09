@@ -19,9 +19,7 @@ class AccumulatedBatch:
     rows: list[dict[str, Any]]
     batch_id: str
     source: str
-    accumulated_at: datetime = field(
-        default_factory=lambda: datetime.now(UTC)
-    )
+    accumulated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def size(self) -> int:

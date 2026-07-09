@@ -139,6 +139,7 @@ def test_dropoff_before_pickup_fails():
 def test_dropoff_one_second_after_pickup_passes():
     svc = ValidationService()
     from datetime import timedelta
+
     one_sec_later = _PICKUP + timedelta(seconds=1)
     ok, error = svc.validate_raw(_valid_row(dropoff_datetime=one_sec_later))
     assert ok is True

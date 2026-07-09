@@ -35,6 +35,7 @@ EXPECTED_VALID_COUNT = 5
 
 def _read_parquet_rows(path: Path) -> list[dict]:
     from etl.infrastructure.storage.parquet_reader import ParquetReader
+
     rows = []
     for batch in ParquetReader(path=path, batch_size=100).iter_batches():
         rows.extend(batch)
@@ -268,10 +269,8 @@ def test_within_batch_duplicates_removed_before_clickhouse(
 
     # Duplicates should appear as InvalidTripDetected with deduplication stage
     from etl.domain.trip.events import ProcessingStage
-    dup_events = [
-        e for e in invalid_events
-        if e.stage == ProcessingStage.DEDUPLICATION
-    ]
+
+    dup_events = [e for e in invalid_events if e.stage == ProcessingStage.DEDUPLICATION]
     assert len(dup_events) == EXPECTED_VALID_COUNT
 
     # Insert the deduplicated batch
@@ -298,9 +297,7 @@ def test_etl_metadata_persisted(
     trip_repository.save_batch_from_dicts([t.to_dict() for t in valid_trips])
 
     result = ch_client.execute(
-        "SELECT DISTINCT batch_id, source_file "
-        "FROM taxi.trips FINAL "
-        "WHERE batch_id = %(batch_id)s",
+        "SELECT DISTINCT batch_id, source_file FROM taxi.trips FINAL WHERE batch_id = %(batch_id)s",
         {"batch_id": batch_id},
     )
 

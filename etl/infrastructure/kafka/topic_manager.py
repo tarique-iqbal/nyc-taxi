@@ -16,7 +16,7 @@ class TopicConfig:
     name: str
     num_partitions: int = 4
     replication_factor: int = 1
-    retention_ms: int = 604_800_000      # 7 days
+    retention_ms: int = 604_800_000  # 7 days
     cleanup_policy: str = "delete"
     compression_type: str = "lz4"
     max_message_bytes: int = 10_485_760  # 10 MB
@@ -106,9 +106,7 @@ class TopicManager:
                         "Topic already exists (race condition)", extra={"topic": topic_name}
                     )
                 else:
-                    logger.error(
-                        "Failed to create topic %s: %s", topic_name, exc
-                    )
+                    logger.error("Failed to create topic %s: %s", topic_name, exc)
                     raise
 
     def list_topics(self) -> list[str]:

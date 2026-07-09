@@ -176,9 +176,7 @@ class ReplayDlqUseCase:
 
         return False
 
-    def _read_from_disk(
-        self, command: ReplayDlqCommand
-    ) -> Iterator[DeadLetterRecord]:
+    def _read_from_disk(self, command: ReplayDlqCommand) -> Iterator[DeadLetterRecord]:
         """
         Yield DeadLetterRecord objects from gzip JSON lines files on disk.
 
@@ -189,9 +187,7 @@ class ReplayDlqUseCase:
             target = command.rejected_dir / f"{command.batch_id}.jsonl.gz"
             files = [target] if target.exists() else []
             if not files:
-                logger.warning(
-                    "No rejected file found for batch_id=%s", command.batch_id
-                )
+                logger.warning("No rejected file found for batch_id=%s", command.batch_id)
         else:
             files = list_rejected_files(command.rejected_dir)
             logger.info(
@@ -228,6 +224,4 @@ class ReplayDlqUseCase:
                     )
 
             except Exception as exc:
-                logger.error(
-                    "Failed to read rejected file %s: %s", file_path, exc
-                )
+                logger.error("Failed to read rejected file %s: %s", file_path, exc)

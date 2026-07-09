@@ -75,9 +75,7 @@ class KafkaConsumerAdapter:
             extra={"topic": topic, "group_id": group_id},
         )
 
-    def consume_batches(
-        self, shutdown_handler: ShutdownHandler
-    ) -> Iterator[AccumulatedBatch]:
+    def consume_batches(self, shutdown_handler: ShutdownHandler) -> Iterator[AccumulatedBatch]:
         """
         Yield accumulated batches until shutdown is requested.
 

@@ -119,10 +119,7 @@ class KafkaLagMonitor:
             logger.warning("Topic not found in metadata", extra={"topic": self._topic})
             return []
 
-        partitions = [
-            TopicPartition(self._topic, pid)
-            for pid in topic_metadata.partitions
-        ]
+        partitions = [TopicPartition(self._topic, pid) for pid in topic_metadata.partitions]
 
         committed = self._consumer.committed(partitions, timeout=10)
 

@@ -6,9 +6,7 @@ from decimal import Decimal
 from typing import Any, TypeAlias
 from uuid import UUID
 
-JSONValue: TypeAlias = (
-    str | int | float | bool | None | list["JSONValue"] | dict[str, "JSONValue"]
-)
+JSONValue: TypeAlias = str | int | float | bool | None | list["JSONValue"] | dict[str, "JSONValue"]
 JSONDict: TypeAlias = dict[str, JSONValue]
 
 

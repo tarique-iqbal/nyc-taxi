@@ -90,6 +90,7 @@ class ProcessTripUseCase:
             # Should never happen in practice.
             from etl.domain.trip.events import ProcessingStage
             from etl.domain.trip.exceptions import DomainError
+
             event = InvalidTripDetected.from_exception(
                 exc=DomainError("No result returned from domain service"),
                 stage=ProcessingStage.PARSING,

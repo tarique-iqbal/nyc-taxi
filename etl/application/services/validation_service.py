@@ -80,9 +80,7 @@ class ValidationService:
     error types in the DLQ.
     """
 
-    def validate_raw(
-        self, row: dict[str, Any]
-    ) -> tuple[bool, str | None]:
+    def validate_raw(self, row: dict[str, Any]) -> tuple[bool, str | None]:
         """
         Validate a raw row against RawTripSchema.
 
@@ -95,8 +93,7 @@ class ValidationService:
             return True, None
         except ValidationError as exc:
             error_summary = "; ".join(
-                f"{'.'.join(str(loc) for loc in e['loc'])}: {e['msg']}"
-                for e in exc.errors()
+                f"{'.'.join(str(loc) for loc in e['loc'])}: {e['msg']}" for e in exc.errors()
             )
             return False, error_summary
 

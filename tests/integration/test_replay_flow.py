@@ -42,6 +42,7 @@ INVALID_COUNT = 5
 
 def _read_parquet_rows(path: Path) -> list[dict]:
     from etl.infrastructure.storage.parquet_reader import ParquetReader
+
     rows = []
     for batch in ParquetReader(path=path, batch_size=100).iter_batches():
         rows.extend(batch)
@@ -56,6 +57,7 @@ def _make_dead_letter_records(
     retry_count: int = 0,
 ) -> list:
     from etl.domain.dead_letter.models import DeadLetterRecord, DeadLetterStage
+
     return [
         DeadLetterRecord(
             original_record=row,
@@ -72,12 +74,14 @@ def _make_dead_letter_records(
 
 def _write_to_dir(records: list, rejected_dir: Path, batch_id: str) -> None:
     from etl.utils.compression import rejected_file_path, write_jsonl_gz
+
     path = rejected_file_path(rejected_dir, batch_id)
     write_jsonl_gz([r.as_dict() for r in records], path)
 
 
 def _read_from_dir(rejected_dir: Path) -> list[dict]:
     from etl.utils.compression import list_rejected_files, read_jsonl_gz
+
     records = []
     for f in list_rejected_files(rejected_dir):
         records.extend(read_jsonl_gz(f))
@@ -125,9 +129,7 @@ def test_valid_records_recovered_on_replay(
     _write_to_dir(records, input_dir, bid)
 
     use_case = _build_replay_use_case(domain_service, kafka_producer, settings, output_dir)
-    result = use_case.handle(
-        ReplayDlqCommand(source=ReplaySource.DISK, rejected_dir=input_dir)
-    )
+    result = use_case.handle(ReplayDlqCommand(source=ReplaySource.DISK, rejected_dir=input_dir))
 
     assert result.total_replayed == VALID_COUNT
     assert result.recovered == VALID_COUNT
@@ -185,9 +187,7 @@ def test_invalid_records_remain_in_dlq_after_replay(
     _write_to_dir(records, input_dir, bid)
 
     use_case = _build_replay_use_case(domain_service, kafka_producer, settings, output_dir)
-    result = use_case.handle(
-        ReplayDlqCommand(source=ReplaySource.DISK, rejected_dir=input_dir)
-    )
+    result = use_case.handle(ReplayDlqCommand(source=ReplaySource.DISK, rejected_dir=input_dir))
 
     assert result.total_replayed == INVALID_COUNT
     assert result.recovered == 0
@@ -211,9 +211,7 @@ def test_retry_count_incremented_on_replay(
 
     bid = str(uuid.uuid4())
     raw_rows = _read_parquet_rows(INVALID_PARQUET)[:1]
-    records = _make_dead_letter_records(
-        raw_rows, bid, "invalid_trips.parquet", retry_count=2
-    )
+    records = _make_dead_letter_records(raw_rows, bid, "invalid_trips.parquet", retry_count=2)
     _write_to_dir(records, input_dir, bid)
 
     use_case = _build_replay_use_case(domain_service, kafka_producer, settings, output_dir)
@@ -245,16 +243,13 @@ def test_mixed_recovery_rate(
     valid_rows = _read_parquet_rows(SAMPLE_PARQUET)[:3]
     invalid_rows = _read_parquet_rows(INVALID_PARQUET)[:2]
 
-    records = (
-        _make_dead_letter_records(valid_rows, bid, "sample.parquet", stage="persist")
-        + _make_dead_letter_records(invalid_rows, bid, "invalid.parquet")
-    )
+    records = _make_dead_letter_records(
+        valid_rows, bid, "sample.parquet", stage="persist"
+    ) + _make_dead_letter_records(invalid_rows, bid, "invalid.parquet")
     _write_to_dir(records, input_dir, bid)
 
     use_case = _build_replay_use_case(domain_service, kafka_producer, settings, output_dir)
-    result = use_case.handle(
-        ReplayDlqCommand(source=ReplaySource.DISK, rejected_dir=input_dir)
-    )
+    result = use_case.handle(ReplayDlqCommand(source=ReplaySource.DISK, rejected_dir=input_dir))
 
     assert result.total_replayed == 5
     assert result.recovered == 3
@@ -326,9 +321,7 @@ def test_empty_rejected_dir_completes_with_zero_totals(
     output_dir.mkdir()
 
     use_case = _build_replay_use_case(domain_service, kafka_producer, settings, output_dir)
-    result = use_case.handle(
-        ReplayDlqCommand(source=ReplaySource.DISK, rejected_dir=input_dir)
-    )
+    result = use_case.handle(ReplayDlqCommand(source=ReplaySource.DISK, rejected_dir=input_dir))
 
     assert result.total_replayed == 0
     assert result.recovered == 0
@@ -374,9 +367,7 @@ def test_multiple_batches_all_replayed_when_no_filter(
         _write_to_dir(records, input_dir, bid)
 
     use_case = _build_replay_use_case(domain_service, kafka_producer, settings, output_dir)
-    result = use_case.handle(
-        ReplayDlqCommand(source=ReplaySource.DISK, rejected_dir=input_dir)
-    )
+    result = use_case.handle(ReplayDlqCommand(source=ReplaySource.DISK, rejected_dir=input_dir))
 
     assert result.total_replayed == 6
     assert result.recovered == 6

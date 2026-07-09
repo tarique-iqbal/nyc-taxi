@@ -36,6 +36,7 @@ EXPECTED_VALID_COUNT = 5
 
 def _read_parquet_rows(path: Path) -> list[dict]:
     from etl.infrastructure.storage.parquet_reader import ParquetReader
+
     rows = []
     for batch in ParquetReader(path=path, batch_size=100).iter_batches():
         rows.extend(batch)
@@ -44,6 +45,7 @@ def _read_parquet_rows(path: Path) -> list[dict]:
 
 def _read_rejected_files(rejected_dir: Path) -> list[dict]:
     from etl.utils.compression import list_rejected_files, read_jsonl_gz
+
     records = []
     for f in list_rejected_files(rejected_dir):
         records.extend(read_jsonl_gz(f))

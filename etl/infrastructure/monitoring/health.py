@@ -45,8 +45,7 @@ class HealthReport:
         return {
             "status": self.overall.value,
             "components": {
-                c.name: {"status": c.status.value, "detail": c.detail}
-                for c in self.components
+                c.name: {"status": c.status.value, "detail": c.detail} for c in self.components
             },
         }
 
@@ -108,6 +107,7 @@ class HealthChecker:
             )
         try:
             from confluent_kafka.admin import AdminClient
+
             admin = AdminClient({"bootstrap.servers": self._kafka_servers})
             metadata = admin.list_topics(timeout=5)
             topic_count = len(metadata.topics)

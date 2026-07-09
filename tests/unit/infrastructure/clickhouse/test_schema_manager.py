@@ -180,6 +180,7 @@ def test_apply_all_applies_only_new_migrations(tmp_path):
 # apply_all: checksum mismatch
 def test_apply_all_logs_warning_on_checksum_mismatch(tmp_path, caplog):
     import logging
+
     sql = "CREATE TABLE IF NOT EXISTS taxi.trips (id String) ENGINE = Memory;"
     _write_migration(tmp_path, "001_initial.sql", sql)
 

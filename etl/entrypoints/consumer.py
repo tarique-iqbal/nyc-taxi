@@ -79,9 +79,7 @@ def main() -> None:
 
         for batch in consumer_adapter.consume_batches(handler):
             try:
-                trip_repository.save_batch_from_dicts(
-                    batch.rows
-                )
+                trip_repository.save_batch_from_dicts(batch.rows)
 
                 # Offset advances only here -- after confirmed insert.
                 consumer_adapter.commit()

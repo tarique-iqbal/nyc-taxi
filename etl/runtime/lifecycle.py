@@ -18,8 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class Shutdownable(Protocol):
-    def shutdown(self) -> None:
-        ...
+    def shutdown(self) -> None: ...
 
 
 @dataclass

@@ -46,6 +46,7 @@ def _build_dead_letter_service(components: AppComponents) -> DeadLetterService:
     from etl.infrastructure.kafka.dead_letter_publisher import (
         KafkaDeadLetterPublisher,
     )
+
     settings = components.settings
     return KafkaDeadLetterPublisher(
         bootstrap_servers=settings.kafka.bootstrap_servers,
@@ -70,14 +71,10 @@ def main() -> None:
             raise RuntimeError("startup() did not initialize Kafka producer")
 
         # Ensure Kafka topics exist before publishing.
-        topic_manager = TopicManager(
-            bootstrap_servers=settings.kafka.bootstrap_servers
-        )
+        topic_manager = TopicManager(bootstrap_servers=settings.kafka.bootstrap_servers)
         topic_manager.ensure_topics_exist()
 
-        domain_service = TripDomainService(
-            zone_repository=components.zone_repository
-        )
+        domain_service = TripDomainService(zone_repository=components.zone_repository)
         dead_letter_service = _build_dead_letter_service(components)
 
         reader = ParquetReader(

@@ -46,8 +46,7 @@ class EnrichmentService:
         """
         if not getattr(self._zone_repo, "is_loaded", True):
             raise RuntimeError(
-                "ZoneRepository is not loaded. "
-                "Call zone_repository.load() during startup sequence."
+                "ZoneRepository is not loaded. Call zone_repository.load() during startup sequence."
             )
 
     def enrich_batch(self, trips: list[Trip]) -> None:
