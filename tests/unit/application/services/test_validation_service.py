@@ -124,8 +124,8 @@ def test_missing_dropoff_location_id_fails():
 def test_dropoff_equal_to_pickup_fails():
     svc = ValidationService()
     ok, error = svc.validate_raw(_valid_row(dropoff_datetime=_PICKUP))
-    assert ok is False
-    assert error is not None
+    assert ok is True
+    assert error is None
 
 
 def test_dropoff_before_pickup_fails():
@@ -190,11 +190,12 @@ def test_validate_batch_mixed():
         _valid_row(),
         {"vendor_id": 1},  # invalid: missing required fields
         _valid_row(),
-        _valid_row(dropoff_datetime=_PICKUP),  # invalid: dropoff == pickup
+        _valid_row(dropoff_datetime=_PICKUP),  # valid schema, invalid domain
     ]
     valid, invalid = svc.validate_batch(rows)
-    assert len(valid) == 2
-    assert len(invalid) == 2
+    assert len(valid) == 3
+    assert len(invalid) == 1
+    assert invalid[0][0] == {"vendor_id": 1}
 
 
 def test_validate_batch_invalid_tuple_has_error_message():

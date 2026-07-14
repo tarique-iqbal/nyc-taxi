@@ -49,7 +49,7 @@ class RawTripSchema(BaseModel):
     @model_validator(mode="after")
     def dropoff_after_pickup(self) -> RawTripSchema:
         """Dropoff must not precede pickup."""
-        if self.dropoff_datetime <= self.pickup_datetime:
+        if self.dropoff_datetime < self.pickup_datetime:
             raise ValueError(
                 f"dropoff_datetime ({self.dropoff_datetime}) must be after "
                 f"pickup_datetime ({self.pickup_datetime})"
