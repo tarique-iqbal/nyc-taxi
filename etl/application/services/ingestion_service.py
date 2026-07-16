@@ -107,19 +107,22 @@ class IngestionService:
             extra={"source_file": self._reader.source_file, "topic": self._topic},
         )
 
-        for raw_batch in self._reader.iter_batches():
-            if self._shutdown_handler.is_shutdown_requested:
-                logger.info("Shutdown requested -- stopping after current batch")
-                break
+        try:
+            for raw_batch in self._reader.iter_batches():
+                if self._shutdown_handler.is_shutdown_requested:
+                    logger.info("Shutdown requested -- stopping after current batch")
+                    break
 
-            with BatchCorrelationContext() as ctx:
-                self._process_batch(raw_batch, ctx.correlation_id, summary)
+                with BatchCorrelationContext() as ctx:
+                    self._process_batch(raw_batch, ctx.correlation_id, summary)
 
-        summary.complete()
-        self._publisher.flush()
+            summary.complete()
 
-        logger.info("Ingestion complete", extra=summary.as_dict())
-        return summary
+            logger.info("Ingestion complete", extra=summary.as_dict())
+            return summary
+
+        finally:
+            self._publisher.flush()
 
     def _process_batch(
         self,
