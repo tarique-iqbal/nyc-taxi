@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, cast
 
+import pandas as pd
+
 
 def _from_epoch(value: float) -> datetime:
     """
@@ -43,6 +45,9 @@ def parse_timestamp(value: Any) -> datetime | None:
     if value is None:
         return None
 
+    if pd.isna(value):
+        return None
+
     if isinstance(value, datetime):
         return value if value.tzinfo else value.replace(tzinfo=UTC)
 
@@ -50,8 +55,6 @@ def parse_timestamp(value: Any) -> datetime | None:
         return _from_epoch(value)
 
     try:
-        import pandas as pd
-
         ts = pd.Timestamp(value)
         if pd.isna(ts):
             return None
