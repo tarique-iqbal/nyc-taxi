@@ -41,10 +41,9 @@ env:
   PARQUET_BATCH_SIZE: "100"
 
 jobs:
-
   integration-tests:
     name: Integration tests (Kafka + ClickHouse)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     steps:
