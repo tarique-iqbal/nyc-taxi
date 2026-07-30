@@ -50,14 +50,13 @@ bash scripts/apply_schema.sh
 # 5. Download data
 bash scripts/download_data.sh
 
-# 6. Start metrics + health servers
-python -m etl.entrypoints.metrics_server &
+# 6. Start health server
 python -m etl.entrypoints.health_server &
 
-# 7. Start consumer (Terminal 2)
+# 7. Start consumer (Terminal 2) -- also serves /metrics on PROMETHEUS_PORT_CONSUMER
 python -m etl.entrypoints.consumer
 
-# 8. Start producer (Terminal 3)
+# 8. Start producer (Terminal 3) -- also serves /metrics on PROMETHEUS_PORT_PRODUCER
 python -m etl.entrypoints.producer
 
 # 9. Monitor

@@ -44,16 +44,13 @@ data:        # Download NYC taxi data
 	bash scripts/download_data.sh
 
 # Run
-.PHONY: producer consumer metrics health
+.PHONY: producer consumer health
 
-producer:    # Run producer entrypoint
+producer:    # Run producer entrypoint (also serves /metrics on PROMETHEUS_PORT_PRODUCER)
 	$(PYTHON) -m etl.entrypoints.producer
 
-consumer:    # Run consumer entrypoint
+consumer:    # Run consumer entrypoint (also serves /metrics on PROMETHEUS_PORT_CONSUMER)
 	$(PYTHON) -m etl.entrypoints.consumer
-
-metrics:     # Run Prometheus metrics server
-	$(PYTHON) -m etl.entrypoints.metrics_server
 
 health:      # Run health check server
 	$(PYTHON) -m etl.entrypoints.health_server

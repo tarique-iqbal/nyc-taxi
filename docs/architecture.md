@@ -118,9 +118,8 @@ Production concerns that belong neither in domain nor infrastructure.
 
 Process entry points. Not imported by anything. Only consume from the layers above.
 
-- `producer.py` — reads Parquet, runs domain pipeline, publishes to Kafka
-- `consumer.py` — consumes Kafka, inserts into ClickHouse, commits offset after insert
-- `metrics_server.py` — serves Prometheus `/metrics` endpoint
+- `producer.py` — reads Parquet, runs domain pipeline, publishes to Kafka; `lifecycle.startup()` also starts a Prometheus `/metrics` server on `PROMETHEUS_PORT_PRODUCER`
+- `consumer.py` — consumes Kafka, inserts into ClickHouse, commits offset after insert; `lifecycle.startup()` also starts a Prometheus `/metrics` server on `PROMETHEUS_PORT_CONSUMER`, and a `LagMonitorLoop` polls consumer group lag on a background thread
 - `health_server.py` — serves FastAPI `/health` and `/ready` endpoints
 
 

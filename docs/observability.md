@@ -48,7 +48,7 @@ Log level is controlled by `LOG_LEVEL` in `.env` (default `INFO`). Set `DEBUG` f
 
 ## Prometheus Metrics
 
-Exposed on `PROMETHEUS_PORT_PRODUCER` (default `9100`) by `metrics_server.py`. Scraped by Prometheus every 15 seconds as configured in `deployments/docker/prometheus/prometheus.yml`.
+Each long-running entrypoint serves its own `/metrics` endpoint, started by `lifecycle.startup()`: the producer on `PROMETHEUS_PORT_PRODUCER` (default `9100`), the consumer on `PROMETHEUS_PORT_CONSUMER` (default `9101`). Prometheus scrapes them as two separate jobs, `nyc-taxi-producer` and `nyc-taxi-consumer`, as configured in `deployments/docker/prometheus/prometheus.yml` -- keeping them separate avoids ambiguous aggregation, since `trips_processed_total` only ever originates from the producer job and `batch_insert_duration_seconds`/`batch_size_rows`/`kafka_consumer_lag`/`trips_persisted_total` only from the consumer job.
 
 ### Metric reference
 
@@ -59,6 +59,14 @@ Total trips processed since startup, by outcome.
 ```promql
 rate(trips_processed_total{status="valid"}[1m])    # valid trips per second
 rate(trips_processed_total{status="invalid"}[1m])  # rejection rate
+```
+
+**`trips_persisted_total`** — Counter
+
+Total trips successfully persisted to ClickHouse, incremented by the consumer only after a batch insert is confirmed. Distinct from `trips_processed_total{status="valid"}`, which reflects the producer's validation outcome, not persistence -- a batch that fails to insert (and is left for Kafka to replay) does not increment this counter.
+
+```promql
+rate(trips_persisted_total[1m])  # persisted trips per second
 ```
 
 **`dlq_records_total{stage}`** — Counter
