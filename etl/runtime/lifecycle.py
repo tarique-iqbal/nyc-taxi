@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol
 
@@ -9,6 +10,8 @@ from etl.observability.structured_logging import setup_logging
 from etl.observability.tracing import setup_tracing
 
 if TYPE_CHECKING:
+    from wsgiref.simple_server import WSGIServer
+
     from etl.infrastructure.clickhouse.client import ClickHouseClient
     from etl.infrastructure.kafka.consumer import KafkaConsumerAdapter
     from etl.infrastructure.kafka.producer import KafkaEventPublisher
@@ -19,6 +22,22 @@ logger = logging.getLogger(__name__)
 
 class Shutdownable(Protocol):
     def shutdown(self) -> None: ...
+
+
+class _MetricsHttpServer:
+    """
+    Wraps the (httpd, thread) pair returned by prometheus_client.start_http_server
+    so it satisfies the Shutdownable protocol used by AppComponents/shutdown().
+    """
+
+    def __init__(self, httpd: WSGIServer, thread: threading.Thread) -> None:
+        self._httpd = httpd
+        self._thread = thread
+
+    def shutdown(self) -> None:
+        self._httpd.shutdown()
+        self._httpd.server_close()
+        self._thread.join(timeout=5.0)
 
 
 @dataclass
@@ -118,6 +137,19 @@ def startup(mode: str = "producer") -> AppComponents:
             group_id=settings.kafka.consumer_group_id,
             topic=settings.kafka.topic,
         )
+
+    # Step 6: Metrics server
+    logger.info("Starting Prometheus metrics server")
+    from prometheus_client import start_http_server
+
+    port = (
+        settings.monitoring.prometheus_port_consumer
+        if mode == "consumer"
+        else settings.monitoring.prometheus_port_producer
+    )
+    httpd, thread = start_http_server(port)
+    components.metrics_server = _MetricsHttpServer(httpd, thread)
+    logger.info("Prometheus metrics server started", extra={"port": port, "mode": mode})
 
     logger.info("Startup complete", extra={"mode": mode})
     return components

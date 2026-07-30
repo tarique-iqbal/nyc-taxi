@@ -215,11 +215,15 @@ def test_shutdown_with_no_components_set():
 
 
 # startup: mode parameter (mocked)
+@patch("prometheus_client.start_http_server")
 @patch("etl.infrastructure.storage.zone_lookup.CsvZoneRepository")
 @patch("etl.infrastructure.kafka.producer.KafkaEventPublisher")
-def test_startup_producer_mode_creates_kafka_producer(MockPublisher, MockZoneRepo):
+def test_startup_producer_mode_creates_kafka_producer(
+    MockPublisher, MockZoneRepo, mock_start_http_server
+):
     from etl.runtime.lifecycle import startup
 
+    mock_start_http_server.return_value = (MagicMock(), MagicMock())
     mock_repo_instance = MagicMock()
     mock_repo_instance.zone_count = 265
     MockZoneRepo.return_value = mock_repo_instance
@@ -230,14 +234,16 @@ def test_startup_producer_mode_creates_kafka_producer(MockPublisher, MockZoneRep
     assert components.kafka_consumer is None
 
 
+@patch("prometheus_client.start_http_server")
 @patch("etl.infrastructure.storage.zone_lookup.CsvZoneRepository")
 @patch("etl.infrastructure.kafka.consumer.KafkaConsumerAdapter")
 @patch("etl.infrastructure.clickhouse.client.ClickHouseClient")
 def test_startup_consumer_mode_creates_clickhouse_and_consumer(
-    MockCHClient, MockConsumer, MockZoneRepo
+    MockCHClient, MockConsumer, MockZoneRepo, mock_start_http_server
 ):
     from etl.runtime.lifecycle import startup
 
+    mock_start_http_server.return_value = (MagicMock(), MagicMock())
     mock_repo_instance = MagicMock()
     mock_repo_instance.zone_count = 265
     MockZoneRepo.return_value = mock_repo_instance
@@ -252,10 +258,12 @@ def test_startup_consumer_mode_creates_clickhouse_and_consumer(
     assert components.kafka_producer is None
 
 
+@patch("prometheus_client.start_http_server")
 @patch("etl.infrastructure.storage.zone_lookup.CsvZoneRepository")
-def test_startup_always_loads_zone_repository(MockZoneRepo):
+def test_startup_always_loads_zone_repository(MockZoneRepo, mock_start_http_server):
     from etl.runtime.lifecycle import startup
 
+    mock_start_http_server.return_value = (MagicMock(), MagicMock())
     mock_repo_instance = MagicMock()
     mock_repo_instance.zone_count = 265
     MockZoneRepo.return_value = mock_repo_instance
@@ -265,11 +273,13 @@ def test_startup_always_loads_zone_repository(MockZoneRepo):
     mock_repo_instance.load.assert_called_once()
 
 
+@patch("prometheus_client.start_http_server")
 @patch("etl.runtime.lifecycle.setup_logging")
 @patch("etl.infrastructure.storage.zone_lookup.CsvZoneRepository")
-def test_startup_calls_setup_logging_first(MockZoneRepo, mock_logging):
+def test_startup_calls_setup_logging_first(MockZoneRepo, mock_logging, mock_start_http_server):
     from etl.runtime.lifecycle import startup
 
+    mock_start_http_server.return_value = (MagicMock(), MagicMock())
     call_order = []
     mock_logging.side_effect = lambda **kw: call_order.append("logging")
 
@@ -283,10 +293,12 @@ def test_startup_calls_setup_logging_first(MockZoneRepo, mock_logging):
     assert call_order[0] == "logging"
 
 
+@patch("prometheus_client.start_http_server")
 @patch("etl.infrastructure.storage.zone_lookup.CsvZoneRepository")
-def test_startup_returns_app_components(MockZoneRepo):
+def test_startup_returns_app_components(MockZoneRepo, mock_start_http_server):
     from etl.runtime.lifecycle import startup
 
+    mock_start_http_server.return_value = (MagicMock(), MagicMock())
     mock_repo_instance = MagicMock()
     mock_repo_instance.zone_count = 265
     MockZoneRepo.return_value = mock_repo_instance
@@ -295,3 +307,68 @@ def test_startup_returns_app_components(MockZoneRepo):
 
     assert isinstance(result, AppComponents)
     assert result.settings is not None
+
+
+# startup: metrics server wiring
+@patch("prometheus_client.start_http_server")
+@patch("etl.infrastructure.storage.zone_lookup.CsvZoneRepository")
+@patch("etl.infrastructure.kafka.producer.KafkaEventPublisher")
+def test_startup_producer_mode_starts_metrics_server_on_producer_port(
+    MockPublisher, MockZoneRepo, mock_start_http_server
+):
+    from etl.runtime.lifecycle import startup
+
+    mock_start_http_server.return_value = (MagicMock(), MagicMock())
+    mock_repo_instance = MagicMock()
+    mock_repo_instance.zone_count = 265
+    MockZoneRepo.return_value = mock_repo_instance
+
+    components = startup(mode="producer")
+
+    mock_start_http_server.assert_called_once_with(
+        components.settings.monitoring.prometheus_port_producer
+    )
+
+
+@patch("prometheus_client.start_http_server")
+@patch("etl.infrastructure.storage.zone_lookup.CsvZoneRepository")
+@patch("etl.infrastructure.kafka.consumer.KafkaConsumerAdapter")
+@patch("etl.infrastructure.clickhouse.client.ClickHouseClient")
+def test_startup_consumer_mode_starts_metrics_server_on_consumer_port(
+    MockCHClient, MockConsumer, MockZoneRepo, mock_start_http_server
+):
+    from etl.runtime.lifecycle import startup
+
+    mock_start_http_server.return_value = (MagicMock(), MagicMock())
+    mock_repo_instance = MagicMock()
+    mock_repo_instance.zone_count = 265
+    MockZoneRepo.return_value = mock_repo_instance
+    MockCHClient.return_value = MagicMock()
+
+    components = startup(mode="consumer")
+
+    mock_start_http_server.assert_called_once_with(
+        components.settings.monitoring.prometheus_port_consumer
+    )
+
+
+@patch("prometheus_client.start_http_server")
+@patch("etl.infrastructure.storage.zone_lookup.CsvZoneRepository")
+@patch("etl.infrastructure.kafka.producer.KafkaEventPublisher")
+def test_startup_sets_metrics_server_component(MockPublisher, MockZoneRepo, mock_start_http_server):
+    from etl.runtime.lifecycle import startup
+
+    mock_httpd = MagicMock()
+    mock_thread = MagicMock()
+    mock_start_http_server.return_value = (mock_httpd, mock_thread)
+    mock_repo_instance = MagicMock()
+    mock_repo_instance.zone_count = 265
+    MockZoneRepo.return_value = mock_repo_instance
+
+    components = startup(mode="producer")
+
+    assert components.metrics_server is not None
+    components.metrics_server.shutdown()
+    mock_httpd.shutdown.assert_called_once()
+    mock_httpd.server_close.assert_called_once()
+    mock_thread.join.assert_called_once()
