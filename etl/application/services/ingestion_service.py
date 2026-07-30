@@ -10,6 +10,7 @@ from etl.application.services.validation_service import ValidationService
 from etl.domain.dead_letter.models import DeadLetterRecord, DeadLetterStage
 from etl.domain.dead_letter.services import DeadLetterService
 from etl.domain.trip.services import TripDomainService
+from etl.infrastructure.monitoring.metrics import trips_processed_total
 from etl.infrastructure.storage.parquet_reader import ParquetReader
 from etl.observability.correlation import BatchCorrelationContext
 from etl.runtime.shutdown import ShutdownHandler
@@ -136,6 +137,8 @@ class IngestionService:
         # Step 1: application-level schema validation
         schema_valid, schema_invalid = self._validation_service.validate_batch(raw_batch)
         summary.total_schema_rejected += len(schema_invalid)
+        if schema_invalid:
+            trips_processed_total.labels(status="invalid").inc(len(schema_invalid))
 
         for row, error_msg in schema_invalid:
             record = DeadLetterRecord(
@@ -155,6 +158,10 @@ class IngestionService:
 
         summary.total_valid += len(valid_trips)
         summary.total_invalid += len(invalid_events)
+        if valid_trips:
+            trips_processed_total.labels(status="valid").inc(len(valid_trips))
+        if invalid_events:
+            trips_processed_total.labels(status="invalid").inc(len(invalid_events))
 
         # Step 3: publish valid trips to Kafka
         if valid_trips:

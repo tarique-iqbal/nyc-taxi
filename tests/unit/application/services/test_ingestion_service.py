@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from etl.application.services.ingestion_service import IngestionService, IngestionSummary
 from etl.domain.trip.events import InvalidTripDetected, ProcessingStage
@@ -339,3 +339,41 @@ def test_run_accumulates_counts_across_batches():
     assert summary.total_rows == 5
     assert summary.total_valid == 3  # 1 + 2
     assert summary.total_invalid == 1
+
+
+# IngestionService.run: trips_processed_total metric
+@patch("etl.application.services.ingestion_service.trips_processed_total")
+def test_run_increments_valid_metric_by_valid_trip_count(mock_metric):
+    trips = [_make_trip("id-1"), _make_trip("id-2")]
+    service, _, _, _ = _make_service(valid_trips=trips)
+    service.run()
+    mock_metric.labels.assert_any_call(status="valid")
+    mock_metric.labels(status="valid").inc.assert_any_call(2)
+
+
+@patch("etl.application.services.ingestion_service.trips_processed_total")
+def test_run_increments_invalid_metric_for_domain_invalid_events(mock_metric):
+    events = [_make_invalid_event("bad-1"), _make_invalid_event("bad-2")]
+    service, _, _, _ = _make_service(invalid_events=events)
+    service.run()
+    mock_metric.labels.assert_any_call(status="invalid")
+    mock_metric.labels(status="invalid").inc.assert_any_call(2)
+
+
+@patch("etl.application.services.ingestion_service.trips_processed_total")
+def test_run_increments_invalid_metric_for_schema_rejected_rows(mock_metric):
+    bad_row = {"vendor_id": 1}
+    service, _, _, _ = _make_service(
+        schema_valid=[],
+        schema_invalid=[(bad_row, "missing required field")],
+    )
+    service.run()
+    mock_metric.labels.assert_any_call(status="invalid")
+    mock_metric.labels(status="invalid").inc.assert_any_call(1)
+
+
+@patch("etl.application.services.ingestion_service.trips_processed_total")
+def test_run_does_not_increment_valid_metric_when_no_valid_trips(mock_metric):
+    service, _, _, _ = _make_service(valid_trips=[], invalid_events=[])
+    service.run()
+    assert mock_metric.labels(status="valid").inc.call_count == 0
