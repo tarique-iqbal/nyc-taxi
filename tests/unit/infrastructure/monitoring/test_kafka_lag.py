@@ -135,7 +135,9 @@ def test_poll_does_not_warn_below_threshold(MockConsumer, MockAdmin, mock_gauge,
     tp = MagicMock()
     tp.partition = 0
     tp.offset = 90
-    mock_consumer.committed.return_value = [tp]
+    mock_future = MagicMock()
+    mock_future.result.return_value.topic_partitions = [tp]
+    mock_admin.list_consumer_group_offsets.return_value = {"group": mock_future}
     mock_consumer.get_watermark_offsets.return_value = (0, 100)  # lag=10
 
     monitor = KafkaLagMonitor("localhost:9092", "group", "topic", lag_alert_threshold=10_000)
@@ -168,7 +170,9 @@ def test_poll_warns_above_threshold(MockConsumer, MockAdmin, mock_gauge, caplog)
     tp = MagicMock()
     tp.partition = 0
     tp.offset = 0
-    mock_consumer.committed.return_value = [tp]
+    mock_future = MagicMock()
+    mock_future.result.return_value.topic_partitions = [tp]
+    mock_admin.list_consumer_group_offsets.return_value = {"group": mock_future}
     mock_consumer.get_watermark_offsets.return_value = (0, 100_000)  # lag=100_000
 
     monitor = KafkaLagMonitor("localhost:9092", "group", "topic", lag_alert_threshold=10_000)
@@ -176,3 +180,57 @@ def test_poll_warns_above_threshold(MockConsumer, MockAdmin, mock_gauge, caplog)
         monitor.poll()
 
     assert any(r.levelno >= logging.WARNING for r in caplog.records)
+
+
+# KafkaLagMonitor: fetch uses admin API, not Consumer.committed()
+@patch("etl.infrastructure.monitoring.kafka_lag.AdminClient")
+@patch("etl.infrastructure.monitoring.kafka_lag.Consumer")
+def test_fetch_uses_admin_list_consumer_group_offsets_not_consumer_committed(
+    MockConsumer, MockAdmin
+):
+    """
+    Regression test: the internal watermark-only Consumer must never be asked
+    for committed offsets on the real group. Calling Consumer.committed()
+    with the real group.id risks Kafka handing this Consumer partitions
+    during a rebalance that it never polls or commits, silently orphaning
+    them from the real consumer -- this happened in production.
+    """
+    mock_admin = MagicMock()
+    mock_consumer = MagicMock()
+    MockAdmin.return_value = mock_admin
+    MockConsumer.return_value = mock_consumer
+
+    partition_meta = MagicMock()
+    partition_meta.partitions = {0: MagicMock()}
+    mock_admin.list_topics.return_value.topics = {"topic": partition_meta}
+
+    tp = MagicMock()
+    tp.partition = 0
+    tp.offset = 0
+    mock_future = MagicMock()
+    mock_future.result.return_value.topic_partitions = [tp]
+    mock_admin.list_consumer_group_offsets.return_value = {"group": mock_future}
+    mock_consumer.get_watermark_offsets.return_value = (0, 0)
+
+    monitor = KafkaLagMonitor("localhost:9092", "group", "topic")
+    monitor.poll()
+
+    mock_admin.list_consumer_group_offsets.assert_called_once()
+    mock_consumer.committed.assert_not_called()
+
+
+@patch("etl.infrastructure.monitoring.kafka_lag.AdminClient")
+@patch("etl.infrastructure.monitoring.kafka_lag.Consumer")
+def test_internal_consumer_uses_a_private_group_id(MockConsumer, MockAdmin):
+    """
+    Regression test: the watermark-only Consumer must be constructed with a
+    group.id distinct from the real consumer group, so it can never become
+    an actual member of that group and steal partitions during a rebalance.
+    """
+    MockAdmin.return_value = MagicMock()
+    MockConsumer.return_value = MagicMock()
+
+    KafkaLagMonitor("localhost:9092", "nyc-taxi-etl-consumer", "topic")
+
+    config = MockConsumer.call_args.args[0]
+    assert config["group.id"] != "nyc-taxi-etl-consumer"

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
-from confluent_kafka import Consumer, KafkaException, TopicPartition
+from confluent_kafka import Consumer, ConsumerGroupTopicPartitions, KafkaException, TopicPartition
 from confluent_kafka.admin import AdminClient
 
 from etl.infrastructure.monitoring.metrics import kafka_consumer_lag
@@ -32,10 +32,21 @@ class KafkaLagMonitor:
     Polls Kafka for consumer group lag and updates the Prometheus gauge.
 
     Queries:
-      1. list_consumer_group_offsets()  -- committed offsets per partition
-      2. get_watermark_offsets()        -- high watermark (latest offset)
+      1. AdminClient.list_consumer_group_offsets() -- committed offsets per
+         partition for the real consumer group, via the admin API. This
+         does not join the group -- it is a metadata lookup, the same kind
+         `kafka-consumer-groups --describe` performs.
+      2. Consumer.get_watermark_offsets()           -- high watermark (latest offset)
       Lag = high watermark - committed offset per partition, summed across
       all partitions.
+
+    The internal Consumer used for get_watermark_offsets() is deliberately
+    given a private group.id distinct from the real consumer group. Giving
+    it the real group.id would make it an actual member of that group --
+    Kafka can then hand it partitions during a rebalance that it never
+    polls or commits, silently orphaning those partitions from the real
+    consumer (this happened in practice: it stalled two of four partitions
+    indefinitely once this monitor ran continuously in the background).
 
     The kafka_consumer_lag Prometheus gauge is updated on each poll() call.
     Grafana and Alertmanager read this gauge to detect a stalled consumer.
@@ -64,7 +75,9 @@ class KafkaLagMonitor:
         self._consumer = Consumer(
             {
                 "bootstrap.servers": bootstrap_servers,
-                "group.id": group_id,
+                # Private group id, distinct from group_id -- see class docstring.
+                # This Consumer is only ever used for get_watermark_offsets().
+                "group.id": f"{group_id}-lag-monitor",
                 "enable.auto.commit": "false",
             }
         )
@@ -121,7 +134,11 @@ class KafkaLagMonitor:
 
         partitions = [TopicPartition(self._topic, pid) for pid in topic_metadata.partitions]
 
-        committed = self._consumer.committed(partitions, timeout=10)
+        request = ConsumerGroupTopicPartitions(self._group_id, partitions)
+        future = self._admin.list_consumer_group_offsets([request], request_timeout=10)[
+            self._group_id
+        ]
+        committed = future.result(timeout=10).topic_partitions
 
         lags = []
         for tp in committed:
