@@ -281,44 +281,70 @@ def test_consumer_shutdown_flushes_consumed_partial_batch(settings, kafka_produc
     than the number of messages. Trigger shutdown and verify that any
     messages already consumed into the accumulator are flushed before exit.
     """
+    from confluent_kafka.admin import AdminClient
+
     from etl.infrastructure.kafka.consumer import KafkaConsumerAdapter
+    from etl.infrastructure.kafka.topic_manager import TopicConfig, TopicManager
 
     batch_id = str(uuid.uuid4())
-    msgs = [{"trip_id": f"sd-{batch_id}-{i}"} for i in range(3)]
-    kafka_producer.publish_batch(settings.kafka.topic, msgs)
-    kafka_producer.flush()
 
-    handler = ShutdownHandler()
-    consumer = KafkaConsumerAdapter(
-        bootstrap_servers=settings.kafka.bootstrap_servers,
-        group_id=f"test-shutdown-{uuid.uuid4()}",
-        topic=settings.kafka.topic,
-        batch_size=100,
-        batch_timeout_seconds=30,
+    # Isolated, throwaway topic -- these messages carry only trip_id (no
+    # pickup_datetime/dropoff_datetime/etc.) since this test only exercises
+    # the accumulator's shutdown/flush behavior, not a full insert. Publishing
+    # to the real settings.kafka.topic would leak them into the shared
+    # dev/consumer topic, where the real consumer reading them would try to
+    # insert into ClickHouse and crash on the missing non-nullable columns.
+    test_topic = "nyc-taxi-trips-shutdown-test"
+    TopicManager(bootstrap_servers=settings.kafka.bootstrap_servers).ensure_topics_exist(
+        [TopicConfig(name=test_topic, num_partitions=1)]
     )
 
-    all_rows: list[dict] = []
-
-    def _trigger():
-        time.sleep(5)
-        handler.request_shutdown()
-
-    t = threading.Thread(target=_trigger, daemon=True)
-    t.start()
-
     try:
-        for batch in consumer.consume_batches(handler):
-            all_rows.extend(batch.rows)
+        msgs = [{"trip_id": f"sd-{batch_id}-{i}"} for i in range(3)]
+        kafka_producer.publish_batch(test_topic, msgs)
+        kafka_producer.flush()
+
+        handler = ShutdownHandler()
+        consumer = KafkaConsumerAdapter(
+            bootstrap_servers=settings.kafka.bootstrap_servers,
+            group_id=f"test-shutdown-{uuid.uuid4()}",
+            topic=test_topic,
+            batch_size=100,
+            batch_timeout_seconds=30,
+        )
+
+        all_rows: list[dict] = []
+
+        def _trigger():
+            time.sleep(5)
+            handler.request_shutdown()
+
+        t = threading.Thread(target=_trigger, daemon=True)
+        t.start()
+
+        try:
+            for batch in consumer.consume_batches(handler):
+                all_rows.extend(batch.rows)
+        finally:
+            consumer.close()
+
+        t.join()
+
+        tagged = [r for r in all_rows if batch_id in r.get("trip_id", "")]
+
+        # Shutdown should flush any records already accumulated before exit.
+        # It is not expected to drain Kafka after shutdown is requested.
+        assert tagged
     finally:
-        consumer.close()
+        # Best-effort teardown -- delete the throwaway topic so repeated
+        # runs don't matter either way, but a failure here must not mask
+        # the test's own assertion result.
+        import contextlib
 
-    t.join()
-
-    tagged = [r for r in all_rows if batch_id in r.get("trip_id", "")]
-
-    # Shutdown should flush any records already accumulated before exit.
-    # It is not expected to drain Kafka after shutdown is requested.
-    assert tagged
+        admin = AdminClient({"bootstrap.servers": settings.kafka.bootstrap_servers})
+        for future in admin.delete_topics([test_topic]).values():
+            with contextlib.suppress(Exception):
+                future.result(timeout=10)
 
 
 # Summary completeness
