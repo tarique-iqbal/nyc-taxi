@@ -7,6 +7,7 @@ from etl.domain.trip.models import Trip
 from etl.domain.trip.repositories import TripRepository
 from etl.infrastructure.clickhouse.client import ClickHouseClient
 from etl.infrastructure.clickhouse.inserter import ColumnarInserter
+from etl.infrastructure.monitoring.metrics import batch_insert_duration_seconds
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,8 @@ class ClickHouseTripRepository(TripRepository):
             return
 
         rows = [trip.to_dict() for trip in trips]
-        self._inserter.insert(rows)
+        with batch_insert_duration_seconds.time():
+            self._inserter.insert(rows)
 
         logger.info(
             "Trip batch saved",
@@ -68,7 +70,8 @@ class ClickHouseTripRepository(TripRepository):
         if not rows:
             return
 
-        self._inserter.insert(rows)
+        with batch_insert_duration_seconds.time():
+            self._inserter.insert(rows)
 
         logger.info(
             "Trip batch saved from dicts",
