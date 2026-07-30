@@ -28,6 +28,9 @@ import sys
 from etl.config.settings import get_settings
 from etl.domain.trip.repositories import TripRepository
 from etl.infrastructure.kafka.consumer import KafkaConsumerAdapter
+from etl.infrastructure.monitoring.kafka_lag import KafkaLagMonitor
+from etl.infrastructure.monitoring.metrics import batch_size_histogram, trips_persisted_total
+from etl.runtime.lag_monitor_loop import LagMonitorLoop
 from etl.runtime.lifecycle import AppComponents, shutdown, startup
 from etl.runtime.shutdown import ShutdownHandler
 
@@ -52,22 +55,30 @@ def _build_trip_repository(components: AppComponents) -> TripRepository:
 def main() -> None:
     settings = get_settings()
     components: AppComponents | None = None
-    consumer_adapter: KafkaConsumerAdapter | None = None
+    lag_monitor_loop: LagMonitorLoop | None = None
     handler = ShutdownHandler()
     handler.register()
 
     try:
         components = startup(mode="consumer")
 
+        if components.kafka_consumer is None:
+            raise RuntimeError("startup() did not initialize Kafka consumer")
+        consumer_adapter: KafkaConsumerAdapter = components.kafka_consumer
+
         trip_repository = _build_trip_repository(components)
 
-        consumer_adapter = KafkaConsumerAdapter(
+        # Kafka lag monitoring runs continuously in its own background
+        # thread rather than being tied to the batch-processing loop below,
+        # since lag should keep being reported even while the consumer is
+        # blocked waiting on the next poll().
+        lag_monitor = KafkaLagMonitor(
             bootstrap_servers=settings.kafka.bootstrap_servers,
             group_id=settings.kafka.consumer_group_id,
             topic=settings.kafka.topic,
-            batch_size=settings.kafka.batch_size,
-            batch_timeout_seconds=settings.kafka.batch_timeout_seconds,
         )
+        lag_monitor_loop = LagMonitorLoop(lag_monitor)
+        lag_monitor_loop.start()
 
         # Register consumer close as a shutdown callback so that
         # if SIGTERM fires mid-poll, the consumer exits the
@@ -80,6 +91,12 @@ def main() -> None:
         for batch in consumer_adapter.consume_batches(handler):
             try:
                 trip_repository.save_batch_from_dicts(batch.rows)
+
+                # Batch size and processed-trip count are only recorded once
+                # persistence is confirmed -- a failed insert must not
+                # inflate throughput metrics for a batch that will replay.
+                batch_size_histogram.observe(batch.size)
+                trips_persisted_total.inc(batch.size)
 
                 # Offset advances only here -- after confirmed insert.
                 consumer_adapter.commit()
@@ -128,8 +145,10 @@ def main() -> None:
         sys.exit(1)
 
     finally:
-        if consumer_adapter is not None:
-            consumer_adapter.close()
+        # consumer_adapter is components.kafka_consumer -- shutdown(components)
+        # closes it below, so it is not closed separately here.
+        if lag_monitor_loop is not None:
+            lag_monitor_loop.shutdown()
         if components is not None:
             shutdown(components)
 
