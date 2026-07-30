@@ -1,9 +1,16 @@
 # Prometheus scrape configuration for the NYC Taxi ETL pipeline.
 #
 # Targets:
-#   etl_pipeline - ETL application metrics
-#   clickhouse   - ClickHouse server metrics
-#   kafka        - Kafka metrics via kafka-exporter (optional)
+#   nyc-taxi-producer - producer entrypoint /metrics (trips_processed_total)
+#   nyc-taxi-consumer - consumer entrypoint /metrics (batch_insert_duration_seconds,
+#                       batch_size_rows, kafka_consumer_lag, trips_persisted_total)
+#   clickhouse        - ClickHouse server metrics
+#   kafka             - Kafka metrics via kafka-exporter (optional)
+#
+# Producer and consumer are scraped as separate jobs -- each metric family
+# only ever originates from one of the two processes, so keeping them as
+# distinct jobs (rather than one shared job) avoids ambiguous aggregation
+# and makes the `job` label meaningful when querying.
 #
 # Prometheus UI: http://localhost:9090
 
@@ -23,21 +30,29 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
-  # ETL application metrics.
-  # Ports correspond to PROMETHEUS_PORT values configured for the producer
-  # and consumer services.
-  - job_name: "etl_pipeline"
+  # Producer /metrics endpoint (PROMETHEUS_PORT_PRODUCER).
+  # Started in-process by etl.entrypoints.producer via lifecycle.startup().
+  - job_name: "nyc-taxi-producer"
     static_configs:
-      - targets:
-          - "host.docker.internal:9100" # producer
-          - "host.docker.internal:9101" # consumer
+      - targets: ["host.docker.internal:9100"]
         labels:
           component: "etl"
+          role: "producer"
 
-    # If ETL services are containerized:
-    # targets:
-    #   - "producer:9100"
-    #   - "consumer:9101"
+    # If the producer is containerized:
+    # targets: ["producer:9100"]
+
+  # Consumer /metrics endpoint (PROMETHEUS_PORT_CONSUMER).
+  # Started in-process by etl.entrypoints.consumer via lifecycle.startup().
+  - job_name: "nyc-taxi-consumer"
+    static_configs:
+      - targets: ["host.docker.internal:9101"]
+        labels:
+          component: "etl"
+          role: "consumer"
+
+    # If the consumer is containerized:
+    # targets: ["consumer:9101"]
 
   # ClickHouse native Prometheus endpoint.
   # Enabled in config.xml:

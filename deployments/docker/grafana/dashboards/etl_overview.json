@@ -167,15 +167,15 @@
       "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, rate(batch_insert_duration_seconds_bucket[5m]))",
+          "expr": "histogram_quantile(0.50, rate(batch_insert_duration_seconds_bucket{job=\"nyc-taxi-consumer\"}[5m]))",
           "legendFormat": "p50"
         },
         {
-          "expr": "histogram_quantile(0.95, rate(batch_insert_duration_seconds_bucket[5m]))",
+          "expr": "histogram_quantile(0.95, rate(batch_insert_duration_seconds_bucket{job=\"nyc-taxi-consumer\"}[5m]))",
           "legendFormat": "p95"
         },
         {
-          "expr": "histogram_quantile(0.99, rate(batch_insert_duration_seconds_bucket[5m]))",
+          "expr": "histogram_quantile(0.99, rate(batch_insert_duration_seconds_bucket{job=\"nyc-taxi-consumer\"}[5m]))",
           "legendFormat": "p99"
         }
       ],
@@ -193,7 +193,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
       "targets": [
         {
-          "expr": "rate(batch_insert_duration_seconds_sum[5m]) / rate(batch_insert_duration_seconds_count[5m]) * 1000",
+          "expr": "rate(batch_insert_duration_seconds_sum{job=\"nyc-taxi-consumer\"}[5m]) / rate(batch_insert_duration_seconds_count{job=\"nyc-taxi-consumer\"}[5m]) * 1000",
           "legendFormat": "avg insert ms"
         }
       ],
@@ -211,7 +211,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
       "targets": [
         {
-          "expr": "rate(batch_insert_duration_seconds_count[1m])",
+          "expr": "rate(batch_insert_duration_seconds_count{job=\"nyc-taxi-consumer\"}[1m])",
           "legendFormat": "batches/s"
         }
       ],
@@ -247,7 +247,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
       "targets": [
         {
-          "expr": "kafka_consumer_lag",
+          "expr": "kafka_consumer_lag{job=\"nyc-taxi-consumer\"}",
           "legendFormat": "consumer lag"
         }
       ],
@@ -265,7 +265,7 @@
       "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [
         {
-          "expr": "kafka_consumer_lag",
+          "expr": "kafka_consumer_lag{job=\"nyc-taxi-consumer\"}",
           "legendFormat": "lag"
         }
       ],
