@@ -28,6 +28,15 @@ batch_insert_duration_seconds = Histogram(
     buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
 )
 
+# Successfully persisted trips
+# Incremented by the consumer only after a ClickHouse insert has been
+# confirmed -- distinct from trips_processed_total{status="valid"}, which
+# reflects the producer's validation outcome, not persistence.
+trips_persisted_total = Counter(
+    "trips_persisted_total",
+    "Total number of trips successfully persisted to ClickHouse",
+)
+
 # Kafka consumer lag
 # Gauge updated by KafkaLagMonitor. Grafana alert fires when this exceeds
 # a configurable threshold (default 10,000 messages).

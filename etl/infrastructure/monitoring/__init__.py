@@ -7,6 +7,7 @@ from etl.infrastructure.monitoring.metrics import (
     dlq_replay_failed_total,
     dlq_replay_recovered_total,
     kafka_consumer_lag,
+    trips_persisted_total,
     trips_processed_total,
 )
 
@@ -17,6 +18,7 @@ __all__ = [
     "KafkaLagMonitor",
     "PartitionLag",
     "trips_processed_total",
+    "trips_persisted_total",
     "dlq_records_total",
     "batch_insert_duration_seconds",
     "kafka_consumer_lag",
