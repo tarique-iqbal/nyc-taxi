@@ -30,7 +30,7 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
-  # Producer /metrics endpoint (PROMETHEUS_PORT_PRODUCER).
+  # Producer /metrics endpoint 9100 (from .env)
   # Started in-process by etl.entrypoints.producer via lifecycle.startup().
   - job_name: "nyc-taxi-producer"
     static_configs:
@@ -42,7 +42,7 @@ scrape_configs:
     # If the producer is containerized:
     # targets: ["producer:9100"]
 
-  # Consumer /metrics endpoint (PROMETHEUS_PORT_CONSUMER).
+  # Consumer /metrics endpoint 9101 (from .env).
   # Started in-process by etl.entrypoints.consumer via lifecycle.startup().
   - job_name: "nyc-taxi-consumer"
     static_configs:

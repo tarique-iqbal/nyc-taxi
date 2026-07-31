@@ -53,10 +53,10 @@ bash scripts/download_data.sh
 # 6. Start health server
 python -m etl.entrypoints.health_server &
 
-# 7. Start consumer (Terminal 2) -- also serves /metrics on PROMETHEUS_PORT_CONSUMER
+# 7. Start consumer (Terminal 2) — also serves /metrics on 9101 (from .env)
 python -m etl.entrypoints.consumer
 
-# 8. Start producer (Terminal 3) -- also serves /metrics on PROMETHEUS_PORT_PRODUCER
+# 8. Start producer (Terminal 3) — also serves /metrics on 9100 (from .env)
 python -m etl.entrypoints.producer
 
 # 9. Monitor

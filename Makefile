@@ -46,10 +46,10 @@ data:        # Download NYC taxi data
 # Run
 .PHONY: producer consumer health
 
-producer:    # Run producer entrypoint (also serves /metrics on PROMETHEUS_PORT_PRODUCER)
+producer:    # Runs producer entrypoint -- also serves /metrics on 9100 (from .env)
 	$(PYTHON) -m etl.entrypoints.producer
 
-consumer:    # Run consumer entrypoint (also serves /metrics on PROMETHEUS_PORT_CONSUMER)
+consumer:    # Runs consumer entrypoint -- also serves /metrics on 9101 (from .env)
 	$(PYTHON) -m etl.entrypoints.consumer
 
 health:      # Run health check server
