@@ -8,6 +8,7 @@ from confluent_kafka import KafkaException, Producer
 
 from etl.domain.dead_letter.models import DeadLetterRecord
 from etl.domain.dead_letter.services import DeadLetterService
+from etl.infrastructure.monitoring.metrics import dlq_records_total
 from etl.utils.compression import rejected_file_path, write_jsonl_gz
 from etl.utils.json import dumps
 
@@ -64,6 +65,7 @@ class KafkaDeadLetterPublisher(DeadLetterService):
         """
         self._write_to_kafka(record)
         self._write_to_disk(record)
+        dlq_records_total.labels(stage=record.stage.value).inc()
 
     def send_batch(self, records: list[DeadLetterRecord]) -> None:
         """
