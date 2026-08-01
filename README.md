@@ -1,6 +1,6 @@
 # NYC Taxi ETL
 
-A production-grade streaming ETL pipeline that ingests NYC Yellow Taxi trip data from Parquet files, streams it through Kafka, validates and enriches it through a DDD domain layer, and persists it into ClickHouse for sub-second analytical queries and dashboard visualization.
+A production-grade streaming ETL platform that ingests NYC Yellow Taxi trip data from Parquet sources, validates and enriches it through a domain-driven pipeline, streams events via Kafka, and persists them to ClickHouse — enabling sub-second analytics and real-time Grafana dashboards.
 
 ## Architecture
 
@@ -85,6 +85,15 @@ etl/
 ├── utils/          # Shared helpers
 └── entrypoints/    # DI wiring, process entry points
 ```
+
+## Documentation
+
+- [Architecture](docs/architecture.md) — full rationale behind the key technical decisions
+- [Event Flow](docs/event_flow.md) — stage-by-stage producer/consumer/DLQ/replay trace
+- [Observability](docs/observability.md) — metrics, logging, tracing reference
+- [Replay Strategy](docs/replay_strategy.md) — DLQ replay decision-making
+- [Scaling Notes](docs/scaling_notes.md) — Kafka/ClickHouse scaling knobs, AWS production architecture
+- [Deployment](docs/deployment.md) — EKS/Terraform/GitOps deployment strategy
 
 ## Key Design Decisions
 
