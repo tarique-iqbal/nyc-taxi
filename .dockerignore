@@ -1,0 +1,15 @@
+# Applies to `docker build` from repo root (deployments/docker/app/Dockerfile).
+.git
+.venv
+.mypy_cache
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+htmlcov
+notes
+tests
+data/raw
+data/rejected
+*.egg-info
+.env
