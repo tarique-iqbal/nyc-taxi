@@ -80,6 +80,56 @@ resource "aws_iam_role_policy_attachment" "ebs_csi" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
 
+# IRSA role for the AWS Load Balancer Controller. Unlike the EBS CSI driver,
+# this has no `aws_eks_addon` -- AWS only ships it as a Helm chart or raw
+# manifests, so only the IAM side is provisioned here. The controller itself
+# is installed by Argo CD (nyc-taxi-gitops, a Helm-sourced Application),
+# since running `helm_release` from this same root module would need the
+# `helm`/`kubernetes` providers configured against a cluster that doesn't
+# exist yet on a from-scratch apply.
+data "aws_iam_policy_document" "alb_controller_assume_role" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.eks.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.oidc_issuer_host}:sub"
+      values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.oidc_issuer_host}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "alb_controller" {
+  name               = "${var.cluster_name}-aws-load-balancer-controller"
+  assume_role_policy = data.aws_iam_policy_document.alb_controller_assume_role.json
+  tags               = var.tags
+}
+
+# No AWS-managed policy ARN exists for this controller (unlike EBS CSI) --
+# the permissions come from the upstream project's own published policy
+# document: https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/main/docs/install/iam_policy.json
+resource "aws_iam_policy" "alb_controller" {
+  name   = "${var.cluster_name}-aws-load-balancer-controller"
+  policy = file("${path.module}/policies/aws-load-balancer-controller-iam-policy.json")
+  tags   = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "alb_controller" {
+  role       = aws_iam_role.alb_controller.name
+  policy_arn = aws_iam_policy.alb_controller.arn
+}
+
 # Core add-ons. ClickHouse/Kafka StatefulSets and the schema/topic Jobs all
 # depend on the EBS CSI driver for their PersistentVolumeClaims.
 resource "aws_eks_addon" "vpc_cni" {
