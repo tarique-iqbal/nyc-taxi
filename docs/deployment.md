@@ -78,7 +78,7 @@ Argo CD detects the change in nyc-taxi-gitops → reconciles the EKS cluster
 
 Path filtering means an app-only commit never triggers a Kafka image rebuild and vice versa; a Terraform-only commit triggers neither (Terraform isn't built as an image). AWS authentication is OIDC federation (`aws-actions/configure-aws-credentials@v4` assuming `AWS_ECR_PUSH_ROLE_ARN`) — no static AWS keys stored in the repo.
 
-**Terraform apply is currently manual, not CI-driven.** `deployments/terraform/` is `terraform validate`-clean but there is no `terraform plan`/`apply` CI job yet — provisioning the actual EKS cluster is a manual `terraform apply -var-file=... -backend-config=...` run from a machine with AWS credentials. Wiring this into CI is a candidate for later, once the cluster exists and a Terraform Cloud/Atlantis-style gated-apply workflow makes sense (see "When to revisit" below).
+**Terraform apply is currently manual, not CI-driven.** `deployments/terraform/` is `terraform validate`-clean but there is no `terraform plan`/`apply` CI job yet — provisioning the actual EKS cluster is a manual `terraform apply -var-file=... -backend-config=...` run from a machine with AWS credentials. Wiring this into CI is a candidate for later, once the cluster exists and a Terraform Cloud/Atlantis-style gated-apply workflow makes sense (see "When to revisit" below). One manual follow-up after apply: paste the `alb_controller_role_arn` output into `nyc-taxi-gitops`'s `aws-load-balancer-controller` Application (`serviceAccount.annotations`) — there's no automated handoff between the two repos for this IRSA role.
 
 
 ## Why self-hosted Kafka + ClickHouse on EKS here, not MSK + ClickHouse-on-EC2
