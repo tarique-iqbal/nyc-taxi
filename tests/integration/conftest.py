@@ -124,26 +124,6 @@ def cleanup_batch(ch_client, batch_id):
         )
 
 
-@pytest.fixture(scope="function")
-def cleanup_clickhouse(ch_client):
-    """Cleanup ClickHouse state after each integration test."""
-
-    yield
-
-    tables = [
-        "taxi.trips",
-        "taxi.trips_hourly_mv",
-        "taxi.trips_daily_mv",
-        "taxi.trips_by_borough_mv",
-        "taxi.trips_by_payment_mv",
-        "taxi.trips_by_zone_mv",
-    ]
-
-    for table in tables:
-        with contextlib.suppress(Exception):
-            ch_client.execute(f"TRUNCATE TABLE {table}")
-
-
 @pytest.fixture(scope="session")
 def kafka_producer(settings):
     from etl.infrastructure.kafka.producer import KafkaEventPublisher

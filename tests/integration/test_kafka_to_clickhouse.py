@@ -377,12 +377,22 @@ def test_repository_accepts_iso8601_timestamp_strings(
     domain_service,
     trip_repository,
     ch_client,
-    batch_id,
-    cleanup_clickhouse,
+    cleanup_batch,
 ):
     """
     Repository must accept Kafka-style ISO8601 datetime strings.
+
+    Shifts pickup/dropoff off SAMPLE_PARQUET's original date: the _mv
+    tables' countState() etc. accumulate per physical insert regardless
+    of trip_id dedup on the raw table, so an extra insert on that date
+    would permanently skew test_materialized_views.py's exact-count
+    assertions with no way to clean it back up.
     """
+    from datetime import timedelta
+
+    from etl.utils.hashing import hash_trip
+
+    batch_id = cleanup_batch
     raw_rows = _read_parquet_rows(SAMPLE_PARQUET)
 
     valid_trips, _ = domain_service.process_batch(
@@ -391,7 +401,19 @@ def test_repository_accepts_iso8601_timestamp_strings(
         source_file="sample_trips.parquet",
     )
 
-    row = valid_trips[0].to_dict()
+    trip = valid_trips[0]
+    shifted_pickup = trip.pickup_datetime + timedelta(days=365)
+    shifted_dropoff = trip.dropoff_datetime + timedelta(days=365)
+
+    row = trip.to_dict()
+    row["pickup_datetime"] = shifted_pickup.isoformat()
+    row["dropoff_datetime"] = shifted_dropoff.isoformat()
+    row["trip_id"] = hash_trip(
+        trip.vendor_id,
+        shifted_pickup,
+        shifted_dropoff,
+        trip.pickup_location_id,
+    )
 
     assert isinstance(row["pickup_datetime"], str)
     assert isinstance(row["dropoff_datetime"], str)
