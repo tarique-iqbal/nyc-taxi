@@ -41,6 +41,32 @@ from tests.integration.conftest import (
 
 pytestmark = [requires_clickhouse, pytest.mark.integration]
 
+_MV_TABLES = (
+    "taxi.trips_hourly_mv",
+    "taxi.trips_daily_mv",
+    "taxi.trips_by_borough_mv",
+    "taxi.trips_by_payment_mv",
+    "taxi.trips_by_zone_mv",
+)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _clean_mv_baseline(ch_client):
+    """
+    Truncate the MV tables once before this file's tests run.
+
+    AggregatingMergeTree state can't be deleted mid-test (see module
+    docstring), so any other integration test that has already inserted
+    a non-canonical shape of the fixture data (a subset, a single row,
+    etc.) leaves a permanent, unrelated contribution to these tables'
+    state for FIXTURE_DATE. Truncating here guarantees this file's
+    exact-count assertions start from a known-clean baseline regardless
+    of what ran earlier in the same pytest session.
+    """
+    for table in _MV_TABLES:
+        ch_client.execute(f"TRUNCATE TABLE {table}")
+
+
 FIXTURE_DATE = "2024-01-15"
 FIXTURE_TOTAL_FARE = 143.25
 FIXTURE_TRIP_COUNT = 5
